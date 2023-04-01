@@ -54,6 +54,8 @@ const OPERATORS = {
 
 const NO_OPERATOR_PROPS = ['offset', 'limit', 'fields', 'sort']
 
+const OP_SEP = '$'
+
 /**
  * creates a query json schema to validate correctness of values
  * @param {Schema} schema
@@ -85,6 +87,9 @@ export const getQuerySchema = (schema) => {
       },
       sort: {
         type: 'string'
+      },
+      includeCount: { // TODO: implement
+        type: 'boolean'
       }
     }
   }
@@ -157,7 +162,7 @@ export const getFilterRule = (param0, reqQuery) => {
   const findOptions = { offset: 0, limit }
 
   for (const [fieldWithOps, _value] of Object.entries(reqQuery)) {
-    const [field, ...ops] = fieldWithOps.split('$')
+    const [field, ...ops] = fieldWithOps.split(OP_SEP)
     const operatorType = operatorTypes[field]
 
     const { errors: _errors, validated } =
@@ -165,11 +170,11 @@ export const getFilterRule = (param0, reqQuery) => {
     Object.assign(errors, _errors)
 
     if (NO_OPERATOR_PROPS.includes(field)) {
-      Object.assign(findOptions, validated)
+      findOptions[field] = validated[field]
       if (field === 'sort' && _value) {
         findOptions.sort = _value.split(',').reduce((curr, val) => {
-          const [field, op] = val.split('$')
-          curr[field] = op === 'desc' ? 0 : 1
+          const [field, op] = val.split(OP_SEP)
+          curr[field] = op === 'desc' ? -1 : 1
           return curr
         }, {})
       }

@@ -112,7 +112,7 @@ describe('utils/query', function () {
         fields: ['item', 'width'],
         offset: 20,
         limit: 200,
-        sort: { item: 1, status: 0 }
+        sort: { item: 1, status: -1 }
       })
     })
 

@@ -9,6 +9,17 @@ import { Schema } from '../Schema.js'
  * @property {boolean} [instantDeletion=true] if `false` do not delete immediately but set `deletedAt` timestamp
  */
 
+/**
+ * @typedef {object} Sort {[field: string]: number} where number 1 = ascending -1 = descending
+ *
+ * @typedef {object} FindOptions
+ * @property {number} [offset] pagination offset
+ * @property {number} [limit] pagination limit
+ * @property {boolean} [includeCount] include document count in response
+ * @property {string[]} [fields] projection fields returned
+ * @property {Sort} [sort] sort order
+ */
+
 const DEFAULT_SCHEMA = {
   required: [
     'id',

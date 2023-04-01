@@ -291,6 +291,43 @@ function testSet (options) {
           assert.deepEqual(body.errors, { foobar: 'unsupported property' })
         })
     })
+
+    it('shall sort documents', async function () {
+      await supertest(options.router.handle)
+        .get('/items')
+        .query({ sort: 'width,height$desc' })
+        .expect(200)
+        .then(({ body }) => {
+          assert.deepEqual(
+            body.data.map(({ item, width, height }) => ({ item, width, height })),
+            [{
+              height: 9,
+              item: 'notebook',
+              width: 11
+            },
+            {
+              height: 8.5,
+              item: 'paper',
+              width: 11
+            },
+            {
+              height: 10,
+              item: 'postcard',
+              width: 15.25
+            },
+            {
+              height: 14,
+              item: 'journal',
+              width: 21
+            },
+            {
+              height: 22.85,
+              item: 'planner',
+              width: 30
+            }]
+          )
+        })
+    })
   })
 }
 

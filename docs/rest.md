@@ -1,26 +1,28 @@
 
-# REST Router 
+# REST Router
 
 All collections / tables require a JSON schema for storing documents.
 
 Only flat objects can be stored and queries (for compatibility with relational
 databases).
 
-To uniquely identify a document an `id` is created when the record is created.
+To uniquely identify a document an `id` is created when the record is created. With this the `createdAt` and `updatedAt` timestamps are set to now. 
+For optimistic locking (regardless if set in database-adapter) `version` is set to 1 and incremented on every update.
 
-Here also a `createdAt` timestamp is added. Together with this the `updatedAt`
-timestamp is created which then will used to perform optimistic locking on that 
-document.
+It is recommended to use plural names for `modelName`. E.g. use "users" instead of "user". Such the path to your model here would be "POST /users" to create a new document in the database.
 
-```json
-{
-  "id": string,       // unique id for record
-  "createdAt": Date,  // created timestamp (set on POST /)
-  "updatedAt": Date,  // updated timestamp (is set on every PUT /:id or PATCH /:id)
-}
-```
+**Table of Contents**
 
-## POST / 
+<!-- !toc (minlevel=2) -->
+
+* [POST /{modelName}&nbsp;](#post-modelname)
+* [PUT /{modelName}/:id](#put-modelnameid)
+* [DELETE /{modelName}/:id](#delete-modelnameid)
+* [GET /{modelName}/:id](#get-modelnameid)
+
+<!-- toc! -->
+
+## POST /{modelName}&nbsp;
 
 Create new document in database.
 
@@ -34,19 +36,42 @@ Provide the data according to the JSON schema
 
   Returns the created document
 
+  ```js
+  {
+    "id": string,
+    "updatedAt": string($date-time),
+    "createdAt": string($date-time),
+    "version": integer,
+    ... // properties according json-schema
+  }
+  ```
+
 - 400 Bad Request
 
   Reasons: Empty document, schema validation error
 
-## PUT /:id 
+## PUT /{modelName}/:id
 
 Update a document.
 
-`updatedAt` timestamp is set to current date-time.
+`updatedAt` timestamp is set to current date-time.  
+`version` number is incremented.
+
+**Returns:**
 
 - 200 OK
 
   Returns the updated document
+
+  ```js
+  {
+    "id": string,
+    "updatedAt": string($date-time),
+    "createdAt": string($date-time),
+    "version": integer,
+    ... // properties according json-schema
+  }
+  ```
 
 - 400 Bad Request
 
@@ -56,8 +81,160 @@ Update a document.
 
   Reasons: Document with `id` not found
 
-## DELETE /:id
+## DELETE /{modelName}/:id
 
 Delete a document with `id`.
 
-TODO:
+By default documents are deleted immediately.
+
+If using `instantDelete=false` through the database-adapter the document is only marked as deleted by setting a `deletedAt` timestamp. 
+
+This requires latter data removal via e.g. cron-jobs to remove the deleted documents from the database.
+
+**Returns:**
+
+- 204 No Content 
+
+  Document deleted
+
+- 404 Not Found
+
+  Document not there (anymore...)
+
+## GET /{modelName}/:id
+
+Finds documents by its id.
+
+**Returns:**
+
+- 200 OK 
+
+  The found document.
+
+  ```js
+  {
+    "id": string,
+    "updatedAt": string($date-time),
+    "createdAt": string($date-time),
+    "version": integer,
+    ... // properties according json-schema
+  }
+  ```
+
+- 404 Not Found
+
+  Document not there (anymore...)
+
+## GET /{modelName}&nbsp;
+
+Query multiple documents.
+
+Only properties which are named in the JSON-schema of the model can be used as
+query parameters
+
+> **⚠️ NOTE:** All query operators `$`-chars must be properly URL encoded with `%24`.
+
+### Query Operators numeric
+
+| operator | description 
+| -------- | ----------- 
+| $gt      | Matches values that are greater than a specified value. 
+| $gte     | Matches values that are greater than or equal to a specified value. 
+| $lt      | Matches values that are less than a specified value. 
+| $lte     | Matches values that are less than or equal to a specified value. 
+| $ne      | Matches all values that are not equal to a specified value. 
+
+**Examples**
+
+```js
+// 10 < width <= 15
+GET ?width%24gt=10&width%24lte=15
+
+// height !== 17
+GET ?height%24ne=17
+```
+
+### Query Operators string
+
+| operator | description
+| -------- | -----------
+| $starts  | starts-with search
+| $like    | contains
+| $ends    | ends-with search
+| $cs      | (modifier) case sensitive search
+| $not     | (modifier) inverse search e.g. `field$not$like=foobar`
+
+**Examples**
+
+```js
+// search all `item`s which do not contain `paper` case-insensitive
+GET ?item%24not%24like=paper
+ 
+// search all `article`s which starts-with `Jacket` case-sensitive
+GET ?article%24starts%24cs=Jacket
+```
+
+### Query Parameters 
+
+| param        | type     | description
+| ------------ | -------- | -----------
+| offset       | integer  | pagination offset
+| limit        | integer  | pagination limit or size (defaults to 100 documents)
+| includeCount | boolean  | Include total document count in response. <br>Requires `?includeCount=true` being set.  
+| fields       | string[] | comma separated list of schema properties which shall be returned
+| sort         | string[] | comma separated list of schema properties for sorting. <br>Needs `$desc` operator for descending sort. <br>Defaults to ascending sort.
+
+> **⚠️ NOTE:** Avoid using the params as document properties. You won't be able to
+query for any of these doc properties then. 
+
+**Examples**
+
+```js
+// get the 2nd page for a page which contains 100 documents
+GET ?offset=100&limit=100&includeCount=true
+ 
+// get back only { id, version, item } properties from the query
+GET ?fields=id,version,item
+
+// sort result set by ascending `price` and descending `date`
+GET ?sort=price,date%24desc
+```
+
+
+**Returns:**
+
+- 200 OK 
+
+  The found documents. 
+
+  ```js
+  {
+    "offset": integer,
+    "limit": integer,
+    "count": integer, // only for &includeCount=true
+    "data": [ // the found documents
+      {
+        "id": string,
+        "updatedAt": string($date-time),
+        "createdAt": string($date-time),
+        "version": integer,
+        ... // properties according json-schema
+      }
+    ]
+  }
+  ```
+
+- 400 Bad Request
+
+  Reason: Validation errors on provided query parameters
+
+  E.g. `GET /{modelName}?foobar=1` where `foobar` is not a valid document property, will respond with:
+  ```js 
+  {
+    "status": 400,
+    "message": "validation error",
+    "errors": {
+      "foobar": "unsupported property"
+    }
+  }
+  ```
