@@ -1,0 +1,21 @@
+version: "3"
+services:
+  mariadb:
+    image: docker.io/library/mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=example
+
+  mongodb:
+    image: docker.io/library/mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+networks:
+  hostnet:
+    external: true
+    name: host
