@@ -363,7 +363,9 @@ const convert = (obj) => {
           break
         }
         default: {
-          if (maxLength > 255) {
+          if (maxLength > 8000) {
+            def.type = DataTypes.TEXT
+          } else if (maxLength > 255) {
             def.type = DataTypes.STRING(maxLength)
           } else {
             def.type = DataTypes.STRING
