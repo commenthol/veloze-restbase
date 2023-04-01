@@ -1,11 +1,19 @@
 version: "3"
 services:
-  mariadb:
-    image: docker.io/library/mariadb:latest
+  # mariadb:
+  #   image: docker.io/library/mariadb:latest
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     - MARIADB_ROOT_PASSWORD=example
+
+  postgres:
+    image: docker.io/library/postgres:alpine
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      - MARIADB_ROOT_PASSWORD=example
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=example
 
   mongodb:
     image: docker.io/library/mongo:latest

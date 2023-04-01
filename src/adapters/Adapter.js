@@ -29,13 +29,22 @@ const DEFAULT_SCHEMA = {
     id: {
       type: 'string'
     },
+    version: {
+      type: 'integer',
+      default: 1
+    },
     updatedAt: {
       type: 'string',
       format: 'date-time'
-    },
-    version: {
-      type: 'number'
     }
+    // createdAt: {
+    //   type: 'string',
+    //   format: 'date-time'
+    // },
+    // deletedAt: {
+    //   type: 'string',
+    //   format: 'date-time'
+    // }
   }
 }
 

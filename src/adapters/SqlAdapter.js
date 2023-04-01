@@ -1,8 +1,9 @@
 import merge from 'deepmerge'
-import { DataTypes } from 'sequelize'
-import { Adapter } from './Adapter.js'
+import { DataTypes, Op } from 'sequelize'
 import { HttpError } from 'veloze'
-import { logger } from '../utils/logger.js'
+import { Adapter } from './Adapter.js'
+import { logger, escapeLike } from '../utils/index.js'
+import { DAY } from '../constants.js'
 
 /**
  * @typedef {import('../Schema.js').Schema} Schema
@@ -13,20 +14,28 @@ const MAX_SAFE_INTEGER = 2147483647 // ~(1 << 31)
 
 const log = logger('sqladapter')
 
-const isNumber = num => num !== undefined && !isNaN(Number(num))
-const isSafeInt = (num) => isNumber(num) && num < MAX_SAFE_INTEGER && num > MIN_SAFE_INTEGER
+const isNumber = (num) => num !== undefined && !isNaN(Number(num))
+const isSafeInt = (num) =>
+  isNumber(num) && num < MAX_SAFE_INTEGER && num > MIN_SAFE_INTEGER
 
 /**
  * @see https://sequelize.org/docs/v6/
  */
 export class SqlAdapter extends Adapter {
   constructor (options) {
-    const { modelName, jsonSchema, client } = options
+    const {
+      modelName,
+      jsonSchema,
+      optimisticLocking,
+      instantDeletion,
+      client
+    } = options
 
-    super({ modelName, jsonSchema })
+    super({ modelName, jsonSchema, optimisticLocking, instantDeletion })
     if (client) {
       this.init({ client })
     }
+    this.adapterType = 'sequelize'
   }
 
   get model () {
@@ -44,7 +53,8 @@ export class SqlAdapter extends Adapter {
           primaryKey: true
         },
         version: {
-          type: DataTypes.BIGINT
+          type: DataTypes.INTEGER,
+          index: true
         },
         updatedAt: {
           type: DataTypes.DATE
@@ -80,51 +90,76 @@ export class SqlAdapter extends Adapter {
    * @returns {Promise<object>} created doc
    */
   async create (doc) {
-    doc.updatedAt = updatedAtToInt(doc)
     const result = await this._model.create(doc)
     if (!result?.dataValues) {
       throw new HttpError(500, 'document creation failed')
     }
-    return fixUpdatedAtDate(result.dataValues)
+    return nullToUndef(result.dataValues)
   }
 
   async update (doc) {
-    const { id, updatedAt, ..._doc } = doc
-    const filter = { id, updatedAt: updatedAtToInt(doc) }
-    doc.updatedAt = Date.now()
+    const { id, version, ..._doc } = doc
+    const filter = { id, deletedAt: null }
+    if (this.optimisticLocking) {
+      filter.version = version
+    }
+    // update date-time and version
+    _doc.updatedAt = new Date()
+    _doc.version = version + 1
+
     const result = await this._model.update(_doc, { where: filter })
     if (!result) {
       throw new HttpError(500, 'document update failed')
     } else if (result[0] !== 1) {
       throw new HttpError(409)
     }
-    return fixUpdatedAtDate(doc)
+    return _doc
   }
 
   async findById (id) {
-    const result = await this._model.findOne({ where: { id } })
+    const where = { id, deletedAt: null }
+    const result = await this._model.findOne({ where })
     if (!result?.dataValues) {
       return
     }
-    const { _id, ...other } = result.dataValues
-    return other
+    return nullToUndef(result.dataValues)
   }
 
   /**
    * find many items in database
-   * @param {object} query
+   * @param {object} filter filter Rules for items
+   * @param {object} findOptions
    * @returns {Promise<object[]>} found items
    */
-  async findMany (query) {
-    // TODO:
-    return []
+  async findMany (filter, findOptions) {
+    const findFilter = {
+      ...convertFindOptions(findOptions),
+      where: {
+        ...convertFilterRule(filter),
+        deletedAt: null
+      }
+    }
+    const results = await this._model.findAll(findFilter)
+    return toArray(results)
   }
 
   async deleteById (id) {
-    const result = await this._model.destroy({ where: { id } })
+    const where = { id, deletedAt: null }
+    const result = this.instantDeletion
+      ? await this._model.destroy({ where })
+      : (await this._model.update({ deletedAt: new Date() }, { where }))?.[0]
+
     if (!result) {
       throw new HttpError(404)
     }
+    return {
+      deletedCount: result
+    }
+  }
+
+  async deleteDeleted (date) {
+    date = date || new Date(Date.now() - 30 * DAY)
+    const result = await this._model.destroy({ where: { deletedAt: { [Op.lte]: date } } })
     return {
       deletedCount: result
     }
@@ -136,7 +171,7 @@ export class SqlAdapter extends Adapter {
  * @param {Schema|object} schema
  * @returns {object} Sequelize model
  */
-export function schemaToModel (schema) {
+function schemaToModel (schema) {
   const _schema = schema.schema || schema
   if (!_schema) {
     throw new Error('need a schema')
@@ -146,6 +181,97 @@ export function schemaToModel (schema) {
   }
   return convert(_schema)
 }
+SqlAdapter.schemaToModel = schemaToModel
+
+/**
+ * see https://sequelize.org/docs/v6/core-concepts/model-querying-basics/
+ */
+function convertFilterRule (filterRule) {
+  const filter = {}
+  for (const [field, rules] of Object.entries(filterRule)) {
+    /* c8 ignore next 3 */
+    if (typeof rules !== 'object') {
+      filter[field] = rules
+      continue
+    }
+
+    // const isCs = !!rules.cs
+    const isNot = !!rules.not
+    const type = rules.type
+
+    let tmp
+    if (type === 'string') {
+      for (const [op, value] of Object.entries(rules)) {
+        switch (op) {
+          case 'like': {
+            const _op = isNot ? Op.notLike : Op.like
+            tmp = { [_op]: `%${escapeLike(value)}%` }
+            break
+          }
+          case 'starts': {
+            const v = { [Op.startsWith]: value }
+            tmp = isNot ? { [Op.not]: v } : v
+            break
+          }
+          case 'ends': {
+            const v = { [Op.endsWith]: value }
+            tmp = isNot ? { [Op.not]: v } : v
+            break
+          }
+          case 'cs':
+          case 'eq':
+          case 'not': {
+            if (tmp) break
+            tmp = isNot ? { [Op.not]: value } : value
+            break
+          }
+        }
+      }
+    } else {
+      // 'number', 'date'
+      tmp = {}
+      for (const [op, value] of Object.entries(rules)) {
+        if (op === 'type') {
+          continue
+        }
+        if (op === 'eq') {
+          tmp = value
+          break
+        }
+        tmp[Op[op]] = value
+      }
+    }
+
+    filter[field] = tmp
+  }
+
+  return filter
+}
+SqlAdapter.convertFilterRule = convertFilterRule
+
+function convertFindOptions (findOptions) {
+  const { offset, limit, fields, sort } = findOptions
+  const options = {}
+
+  if (typeof offset === 'number') {
+    options.offset = offset
+  }
+  if (typeof limit === 'number') {
+    options.limit = limit
+  }
+  if (Array.isArray(fields)) {
+    options.attributes = fields
+  }
+  if (sort && typeof sort === 'object') {
+    options.order = []
+    for (const [field, order] of Object.entries(sort)) {
+      options.order.push([field, order === 1 ? 'ASC' : 'DESC'])
+    }
+  }
+
+  return options
+}
+SqlAdapter.convertFindOptions = convertFindOptions
 
 /**
  * conversion helper for schemaToModel
@@ -180,7 +306,8 @@ const convert = (obj) => {
         default: _default
       } = obj
 
-      const useTypeInt = isSafeInt(minimum || exclusiveMinimum) ||
+      const useTypeInt =
+        isSafeInt(minimum || exclusiveMinimum) ||
         isSafeInt(maximum || exclusiveMaximum)
 
       // DataTypes.FLOAT  4byte precision  0-23
@@ -200,7 +327,8 @@ const convert = (obj) => {
         default: _default
       } = obj
 
-      const useTypeInt = isSafeInt(minimum || exclusiveMinimum) ||
+      const useTypeInt =
+        isSafeInt(minimum || exclusiveMinimum) ||
         isSafeInt(maximum || exclusiveMaximum)
 
       const def = { type: useTypeInt ? DataTypes.INTEGER : DataTypes.BIGINT }
@@ -247,20 +375,20 @@ const convert = (obj) => {
   }
 }
 
-/**
- * extract updatedAt timestamp from document and convert to integer
- * @param {object} doc
- * @returns {number}
- */
-const updatedAtToInt = (doc) => new Date(doc.updatedAt).getTime()
+const toArray = (results) => {
+  const data = []
+  for (const result of results) {
+    data.push(nullToUndef(result.dataValues))
+  }
+  return data
+}
 
-/**
- * convert updatedAt from integer to Date on document
- * @param {object} doc
- * @returns {object}
- */
-const fixUpdatedAtDate = (doc) => {
-  const { updatedAt } = doc
-  doc.updatedAt = new Date(updatedAt)
+const nullToUndef = (doc) => {
+  if (!doc) return
+  for (const [field, value] of Object.entries(doc)) {
+    if (value === null) {
+      Reflect.deleteProperty(doc, field)
+    }
+  }
   return doc
 }

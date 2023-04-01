@@ -164,6 +164,19 @@ GET ?height%24ne=17
 | $cs      | (modifier) case sensitive search
 | $not     | (modifier) inverse search e.g. `field$not$like=foobar`
 
+> **⚠️ NOTE:** Case (in-)sensitive search may not work for all database
+> adapters. Please consider setting the correct collation. 
+> E.g. for [postgres](https://www.postgresql.org/docs/current/collation.html#COLLATION-NONDETERMINISTIC) choose 
+> ```sql
+> CREATE COLLATION case_insensitive (provider = icu, locale = 'und-u-ks-level2', deterministic = false);
+> ```
+> E.g. for mariadb, mysql
+> ```sql
+> ALTER TABLE mytable
+> CONVERT TO CHARACTER SET utf8mb4 
+> COLLATE utf8mb4_general_ci; -- *_ci = case insensitive
+> ```
+
 **Examples**
 
 ```js

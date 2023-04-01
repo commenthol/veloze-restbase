@@ -24,7 +24,7 @@ export class MongoAdapter extends Adapter {
      * @param {MongoAdapterOptions} options
      */
     constructor(options: MongoAdapterOptions);
-    _adapterType: string;
+    adapterType: string;
     _database: string;
     /**
      * @param {MongoInitOptions} options

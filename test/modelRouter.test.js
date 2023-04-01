@@ -5,6 +5,7 @@ import supertest from 'supertest'
 import { Router } from 'veloze'
 import { MongoAdapter } from '../src/adapters/MongoAdapter.js'
 import { SqlAdapter } from '../src/adapters/SqlAdapter.js'
+// import from 'pg'
 import { modelRouter } from '../src/index.js'
 import { Sequelize } from 'sequelize'
 
@@ -14,10 +15,11 @@ dotenv.config()
 
 const {
   MONGODB_URL = 'mongodb://root:example@127.0.0.1:27017',
-  MARIADB_USER = 'root',
-  MARIADB_PASSWORD = 'example',
-  MARIADB_HOST = '127.0.0.01',
-  MARIADB_PORT = '3306'
+  SQLDB_USER = 'root',
+  SQLDB_PASSWORD = 'example',
+  SQLDB_HOST = '127.0.0.01',
+  SQLDB_PORT = '5432',
+  SQLDB_DIALECT = 'postgres'
 } = process.env
 
 function testSet (options) {
@@ -113,9 +115,10 @@ function testSet (options) {
         .type('json')
         .send({ ...doc, item: 'paperclip' })
         .expect(200)
-        .then((res) => {
-          assert.equal(res.body.item, 'paperclip')
-          assert.equal(res.body.version, 2)
+        .then(({ body }) => {
+          // console.log(body)
+          assert.equal(body.item, 'paperclip')
+          assert.equal(body.version, 2)
         })
     })
 
@@ -176,12 +179,17 @@ function testSet (options) {
       assert.ok(cache.doc, 'need cache from previous tests')
       const { id } = cache.doc
 
-      if (options.instantDeletion) return
+      if (this.adapter.instantDeletion) return
 
-      await options.adapter.deleteDeleted(new Date())
+      await this.adapter.deleteDeleted(new Date())
 
-      if (this._adapterType === 'mongo') {
-        const result = await options.adapter.model.findOne({ id })
+      if (this.adapter.adapterType === 'mongo') {
+        const result = await this.adapter.model.findOne({ id })
+        assert.deepEqual(result, null)
+      }
+
+      if (this.adapter.adapterType === 'sequelize') {
+        const result = await this.adapter.model.findOne({ where: { id } })
         assert.deepEqual(result, null)
       }
     })
@@ -251,9 +259,11 @@ function testSet (options) {
     })
 
     it('shall find all items which start with a `pa`', async function () {
+      const value = this.adapter.adapterType === 'mongo' ? 'Pa' : 'pa'
+
       await supertest(options.router.handle)
         .get('/items')
-        .query({ item$starts: 'Pa' })
+        .query({ item$starts: value })
         .expect(200)
         .then(({ body }) => {
           assert.equal(Array.isArray(body.data), true)
@@ -375,7 +385,7 @@ describe('modelRouter', function () {
     testSet(options)
   })
 
-  describe('MongoAdapter optimisticLocking=false deferredDeletion', function () {
+  describe('MongoAdapter optimisticLocking=off instantDeletion=off', function () {
     const options = {}
 
     before(async function () {
@@ -408,9 +418,6 @@ describe('modelRouter', function () {
 
       // cleanup collection
       await this.adapter.model.deleteMany({})
-      options.adapter = adapter
-      options.optimisticLocking = adapter.optimisticLocking
-      options.instantDeletion = adapter.instantDeletion
     })
 
     after(async function () {
@@ -420,17 +427,15 @@ describe('modelRouter', function () {
     testSet(options)
   })
 
-  describe.skip('SqlAdapter', function () {
+  describe('SqlAdapter', function () {
     const options = {}
-
-    // TODO: create table on startup
 
     before(async function () {
       // create a db connection (might be reused for various routers)
-      this.client = new Sequelize('test', MARIADB_USER, MARIADB_PASSWORD, {
-        host: MARIADB_HOST,
-        port: MARIADB_PORT,
-        dialect: 'mariadb',
+      this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
+        host: SQLDB_HOST,
+        port: SQLDB_PORT,
+        dialect: SQLDB_DIALECT,
         logging: false
         // logging: (...msg) => console.dir(msg, { depth: null })
         // logging: (...msg) => console.log(msg)
@@ -438,7 +443,9 @@ describe('modelRouter', function () {
 
       const database = 'test'
       try {
-        const statement = `CREATE DATABASE \`${database}\` DEFAULT CHARACTER SET = \`utf8mb4\` DEFAULT COLLATE = \`utf8mb4_general_ci\``
+        const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
+          ? `CREATE DATABASE "${database}" DEFAULT CHARACTER SET = "utf8mb4" DEFAULT COLLATE = "utf8mb4_general_ci";`
+          : `CREATE DATABASE "${database}";`
         await this.client.query(statement)
       } catch (e) {
         // console.error(e)
@@ -456,6 +463,65 @@ describe('modelRouter', function () {
       // mount it
       const router = (options.router = new Router())
       router.use(userRouter.mountPath, userRouter.handle)
+
+      // cleanup collection
+      await this.adapter.model.destroy({
+        where: {},
+        truncate: true
+      })
+    })
+
+    after(function () {
+      this.client.close()
+    })
+
+    testSet(options)
+  })
+
+  describe('SqlAdapter optimisticLocking=off instantDeletion=off', function () {
+    const options = {}
+
+    before(async function () {
+      // create a db connection (might be reused for various routers)
+      this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
+        host: SQLDB_HOST,
+        port: SQLDB_PORT,
+        dialect: SQLDB_DIALECT,
+        logging: false
+        // logging: (...msg) => console.dir(msg, { depth: null })
+        // logging: (...msg) => console.log(msg)
+      })
+
+      const database = 'test'
+      try {
+        const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
+          ? `CREATE DATABASE "${database}" DEFAULT CHARACTER SET = "utf8mb4" DEFAULT COLLATE = "utf8mb4_general_ci";`
+          : `CREATE DATABASE "${database}";`
+        await this.client.query(statement)
+      } catch (e) {
+        // console.error(e)
+      }
+
+      // create db-adapter with the jsonSchema
+      const adapter = (this.adapter = new SqlAdapter({
+        modelName: 'items',
+        database,
+        jsonSchema: dbItemsSchema,
+        optimisticLocking: false,
+        instantDeletion: false
+      }))
+      await adapter.init({ client: this.client })
+      // define our rest-router based on the db-adapter
+      const userRouter = modelRouter({ adapter })
+      // mount it
+      const router = (options.router = new Router())
+      router.use(userRouter.mountPath, userRouter.handle)
+
+      // cleanup collection
+      await this.adapter.model.destroy({
+        where: {},
+        truncate: true
+      })
     })
 
     after(function () {

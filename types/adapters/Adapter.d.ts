@@ -85,4 +85,30 @@ export type AdapterOptions = {
      */
     instantDeletion?: boolean | undefined;
 };
+/**
+ * {[field: string]: number} where number 1 = ascending -1 = descending
+ */
+export type Sort = object;
+export type FindOptions = {
+    /**
+     * pagination offset
+     */
+    offset?: number | undefined;
+    /**
+     * pagination limit
+     */
+    limit?: number | undefined;
+    /**
+     * include document count in response
+     */
+    includeCount?: boolean | undefined;
+    /**
+     * projection fields returned
+     */
+    fields?: string[] | undefined;
+    /**
+     * sort order
+     */
+    sort?: Sort;
+};
 import { Schema } from '../Schema.js';

@@ -44,7 +44,7 @@ export class MongoAdapter extends Adapter {
     }
     super({ modelName, jsonSchema, optimisticLocking, instantDeletion })
 
-    this._adapterType = 'mongo'
+    this.adapterType = 'mongo'
     this._database = database
     if (client) {
       this.init({ client })
@@ -94,7 +94,6 @@ export class MongoAdapter extends Adapter {
     if (this.optimisticLocking) {
       filter.version = version
     }
-
     // update date-time and version
     _doc.updatedAt = new Date()
     _doc.version = version + 1
@@ -163,11 +162,8 @@ export class MongoAdapter extends Adapter {
   async deleteDeleted (date) {
     date = date || new Date(Date.now() - 30 * DAY)
     const result = await this._model.deleteMany({ deletedAt: { $lte: date } })
-    if (!result?.acknowledged) {
-      throw new HttpError(404)
-    }
     return {
-      deletedCount: result.deletedCount
+      deletedCount: result?.deletedCount || 0
     }
   }
 }
