@@ -1,4 +1,4 @@
-# rest-to-db
+# @veloze/restbase
 
 TODO:
 
