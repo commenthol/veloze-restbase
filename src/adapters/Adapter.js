@@ -23,7 +23,7 @@ import { Schema } from '../Schema.js'
 const DEFAULT_SCHEMA = {
   required: [
     'id',
-    'updatedAt'
+    'version'
   ],
   properties: {
     id: {

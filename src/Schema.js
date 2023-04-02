@@ -26,6 +26,7 @@ export class Schema {
     const ajv = new Ajv({
       strict: true,
       allErrors: true,
+      coerceTypes: true, // some databases return string instead of number
       useDefaults: true,
       removeAdditional: true,
       ...ajvOpts

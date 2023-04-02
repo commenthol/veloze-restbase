@@ -1,11 +1,23 @@
 version: "3"
 services:
-  # mariadb:
-  #   image: docker.io/library/mariadb:latest
-  #   ports:
-  #     - "3306:3306"
-  #   environment:
-  #     - MARIADB_ROOT_PASSWORD=example
+  mariadb:
+    image: docker.io/library/mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=example
+
+  # see https://www.cockroachlabs.com/docs/stable/start-a-local-cluster-in-docker-mac.html#start-a-single-node-cluster
+  cockroach:
+    image: docker.io/cockroachdb/cockroach:latest
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    environment:
+      # - COCKROACH_DATABASE=/cockroach/cockroach-data
+      - COCKROACH_USERCOCK=root
+      - ROACH_PASSWORD=example
+    command: start-single-node --advertise-addr 'localhost' --insecure
 
   postgres:
     image: docker.io/library/postgres:alpine

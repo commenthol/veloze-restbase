@@ -61,7 +61,7 @@ describe('utils/query', function () {
     })
 
     it('width=10', function () {
-      const { errors } = querySchema.validate({ width: '10' })
+      const { errors } = querySchema.validate({ width: '10a' })
       assert.deepEqual(errors, { width: 'must be number' })
     })
   })

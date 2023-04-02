@@ -24,7 +24,7 @@ describe('schema', function () {
     const compiled = new Schema(schema)
 
     const { errors, validated } = compiled.validate({
-      typeBoolean: 1,
+      typeBoolean: '1a',
       typeNumber: '',
       typeNumberMinimum: 0,
       typeNumberMaximum: 10,
@@ -39,7 +39,7 @@ describe('schema', function () {
       pattern: 'abc',
       enum: 'foo',
       const: 'foo',
-      arrayOfIntegers: [1, 2, '3'],
+      arrayOfIntegers: [1, 2, '3.1'],
       arrayMinItemsOne: [],
       arrayMinItems: [1],
       arrayMaxItems: [1, 2, 3],
@@ -66,14 +66,13 @@ describe('schema', function () {
       typeNumberExclusiveMinimum: 'must be > 1',
       typeNumberMaximum: 'must be <= 1',
       typeNumberMinimum: 'must be >= 1',
-      typeString: 'must be string',
       typeUri: 'must match format "uri"',
       uniqueArray:
         'must NOT have duplicate items (items ## 2 and 1 are identical)'
     })
     // console.log(data)
     assert.deepEqual(validated, {
-      typeBoolean: 1,
+      typeBoolean: '1a',
       typeNumber: '',
       typeNumberMinimum: 0,
       typeNumberMaximum: 10,
@@ -81,14 +80,14 @@ describe('schema', function () {
       typeNumberExclusiveMaximum: 10,
       typeInteger: 1.1,
       typeIntegerMultipleOf: 4,
-      typeString: false,
+      typeString: 'false',
       typeEmail: 'aa',
       typeUri: 'aa',
       typePassword: '',
       pattern: 'abc',
       enum: 'foo',
       const: 'foo',
-      arrayOfIntegers: [1, 2, '3'],
+      arrayOfIntegers: [1, 2, '3.1'],
       arrayMinItemsOne: [],
       arrayMinItems: [1],
       arrayMaxItems: [1, 2, 3],

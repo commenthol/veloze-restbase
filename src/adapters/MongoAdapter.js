@@ -168,6 +168,10 @@ export class MongoAdapter extends Adapter {
   }
 }
 
+/**
+ * @param {object} filterRule
+ * @returns {object} mongo filter 
+ */
 const convertFilterRule = (filterRule) => {
   const filter = {}
   for (const [field, rules] of Object.entries(filterRule)) {

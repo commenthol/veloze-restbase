@@ -8,7 +8,6 @@ import { SqlAdapter } from '../src/adapters/SqlAdapter.js'
 // import from 'pg'
 import { modelRouter } from '../src/index.js'
 import { Sequelize } from 'sequelize'
-
 import { dbItems, dbItemsSchema } from './fixtures/dbitems.js'
 
 dotenv.config()
@@ -93,16 +92,19 @@ function testSet (options) {
 
     it('shall fail to update item without wrong type', function () {
       assert.ok(cache.doc, 'need cache from previous tests')
-      const { id, updatedAt } = cache.doc
+      const { id, version } = cache.doc
       return supertest(options.router.handle)
         .put(`/items/${id}`)
         .type('json')
-        .send({ item: 100, updatedAt })
+        .send({ unit: 100, version })
         .expect(400)
         .then(({ body }) => {
           // console.log(body)
           assert.equal(body.message, 'validation error')
-          assert.deepEqual(body.errors, { item: 'must be string' })
+          assert.deepEqual(body.errors, {
+            item: "must have required property 'item'",
+            unit: 'must be equal to one of the allowed values'
+          })
         })
     })
 
@@ -196,8 +198,6 @@ function testSet (options) {
   })
 
   describe('find', function () {
-    // https://www.mongodb.com/docs/v6.0/tutorial/query-documents
-
     before(async function () {
       for (const record of dbItems) {
         // console.log(record)
@@ -343,191 +343,196 @@ function testSet (options) {
 
 describe('modelRouter', function () {
   describe('MongoAdapter', function () {
-    const options = {}
+    describe('MongoAdapter optimisticLocking=true', function () {
+      const options = {}
 
-    before(async function () {
+      before(async function () {
       // create a db connection (might be reused for various routers)
-      this.client = new MongoClient(MONGODB_URL)
+        this.client = new MongoClient(MONGODB_URL)
 
-      const database = 'test'
-      try {
-        const db = await this.client.db(database)
-        db.createCollection('items')
-      } catch (e) {
+        const database = 'test'
+        try {
+          const db = await this.client.db(database)
+          db.createCollection('items')
+        } catch (e) {
         // console.error(e)
-      }
+        }
 
-      // create db-adapter with the jsonSchema
-      const adapter = (this.adapter = new MongoAdapter({
-        client: this.client,
-        modelName: 'items',
-        database,
-        jsonSchema: dbItemsSchema
-      }))
+        // create db-adapter with the jsonSchema
+        const adapter = (this.adapter = new MongoAdapter({
+          client: this.client,
+          modelName: 'items',
+          database,
+          jsonSchema: dbItemsSchema
+        }))
 
-      // define our rest-router based on the db-adapter
-      const itemRouter = modelRouter({ adapter })
-      // mount it
-      const router = (options.router = new Router())
-      router.use(itemRouter.mountPath, itemRouter.handle)
+        // define our rest-router based on the db-adapter
+        const itemRouter = modelRouter({ adapter })
+        // mount it
+        const router = (options.router = new Router())
+        router.use(itemRouter.mountPath, itemRouter.handle)
 
-      // cleanup collection
-      await this.adapter.model.deleteMany({})
-      options.adapter = adapter
-      options.optimisticLocking = adapter.optimisticLocking
-      options.instantDeletion = adapter.instantDeletion
+        // cleanup collection
+        await this.adapter.model.deleteMany({})
+        options.adapter = adapter
+        options.optimisticLocking = adapter.optimisticLocking
+        options.instantDeletion = adapter.instantDeletion
+      })
+
+      after(async function () {
+        this.client.close()
+      })
+
+      testSet(options)
     })
 
-    after(async function () {
-      this.client.close()
-    })
+    describe('MongoAdapter optimisticLocking=false instantDeletion=false', function () {
+      const options = {}
 
-    testSet(options)
-  })
-
-  describe('MongoAdapter optimisticLocking=off instantDeletion=off', function () {
-    const options = {}
-
-    before(async function () {
+      before(async function () {
       // create a db connection (might be reused for various routers)
-      this.client = new MongoClient(MONGODB_URL)
+        this.client = new MongoClient(MONGODB_URL)
 
-      const database = 'test'
-      try {
-        const db = await this.client.db(database)
-        db.createCollection('items')
-      } catch (e) {
+        const database = 'test'
+        try {
+          const db = await this.client.db(database)
+          db.createCollection('items')
+        } catch (e) {
         // console.error(e)
-      }
+        }
 
-      // create db-adapter with the jsonSchema
-      const adapter = (this.adapter = new MongoAdapter({
-        client: this.client,
-        modelName: 'items',
-        database,
-        jsonSchema: dbItemsSchema,
-        optimisticLocking: false,
-        instantDeletion: false
-      }))
+        // create db-adapter with the jsonSchema
+        const adapter = (this.adapter = new MongoAdapter({
+          client: this.client,
+          modelName: 'items',
+          database,
+          jsonSchema: dbItemsSchema,
+          optimisticLocking: false,
+          instantDeletion: false
+        }))
 
-      // define our rest-router based on the db-adapter
-      const itemRouter = modelRouter({ adapter })
-      // mount it
-      const router = (options.router = new Router())
-      router.use(itemRouter.mountPath, itemRouter.handle)
+        // define our rest-router based on the db-adapter
+        const itemRouter = modelRouter({ adapter })
+        // mount it
+        const router = (options.router = new Router())
+        router.use(itemRouter.mountPath, itemRouter.handle)
 
-      // cleanup collection
-      await this.adapter.model.deleteMany({})
+        // cleanup collection
+        await this.adapter.model.deleteMany({})
+      })
+
+      after(async function () {
+        this.client.close()
+      })
+
+      testSet(options)
     })
-
-    after(async function () {
-      this.client.close()
-    })
-
-    testSet(options)
   })
 
   describe('SqlAdapter', function () {
-    const options = {}
+    describe('SqlAdapter optimisticLocking=true', function () {
+      const options = {}
 
-    before(async function () {
+      before(async function () {
       // create a db connection (might be reused for various routers)
-      this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
-        host: SQLDB_HOST,
-        port: SQLDB_PORT,
-        dialect: SQLDB_DIALECT,
-        logging: false
+        this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
+          host: SQLDB_HOST,
+          port: SQLDB_PORT,
+          dialect: SQLDB_DIALECT,
+          logging: false
+          // logging: (...msg) => console.dir(msg, { depth: null })
+          // logging: (...msg) => console.log(msg)
+        })
+
+        // auto db creation does not (reliably) work
+        const database = 'test'
+        try {
+          const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
+            ? `CREATE DATABASE ${database} DEFAULT CHARACTER SET = utf8mb4 DEFAULT COLLATE = utf8mb4_general_ci;`
+            : `CREATE DATABASE ${database};`
+          await this.client.query(statement)
+        } catch (e) {
+          // console.error(e)
+        }
+
+        // create db-adapter with the jsonSchema
+        const adapter = (this.adapter = new SqlAdapter({
+          modelName: 'items',
+          database,
+          jsonSchema: dbItemsSchema
+        }))
+        await adapter.init({ client: this.client })
+        // define our rest-router based on the db-adapter
+        const userRouter = modelRouter({ adapter })
+        // mount it
+        const router = (options.router = new Router())
+        router.use(userRouter.mountPath, userRouter.handle)
+
+        // cleanup collection
+        await this.adapter.model.destroy({
+          where: {},
+          truncate: true
+        })
+      })
+
+      after(function () {
+        this.client.close()
+      })
+
+      testSet(options)
+    })
+
+    describe('SqlAdapter optimisticLocking=false instantDeletion=false', function () {
+      const options = {}
+
+      before(async function () {
+      // create a db connection (might be reused for various routers)
+        this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
+          host: SQLDB_HOST,
+          port: SQLDB_PORT,
+          dialect: SQLDB_DIALECT,
+          logging: false
         // logging: (...msg) => console.dir(msg, { depth: null })
         // logging: (...msg) => console.log(msg)
-      })
+        })
 
-      const database = 'test'
-      try {
-        const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
-          ? `CREATE DATABASE "${database}" DEFAULT CHARACTER SET = "utf8mb4" DEFAULT COLLATE = "utf8mb4_general_ci";`
-          : `CREATE DATABASE "${database}";`
-        await this.client.query(statement)
-      } catch (e) {
+        const database = 'test'
+        try {
+          const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
+            ? `CREATE DATABASE "${database}" DEFAULT CHARACTER SET = "utf8mb4" DEFAULT COLLATE = "utf8mb4_general_ci";`
+            : `CREATE DATABASE "${database}";`
+          await this.client.query(statement)
+        } catch (e) {
         // console.error(e)
-      }
+        }
 
-      // create db-adapter with the jsonSchema
-      const adapter = (this.adapter = new SqlAdapter({
-        modelName: 'items',
-        database,
-        jsonSchema: dbItemsSchema
-      }))
-      await adapter.init({ client: this.client })
-      // define our rest-router based on the db-adapter
-      const userRouter = modelRouter({ adapter })
-      // mount it
-      const router = (options.router = new Router())
-      router.use(userRouter.mountPath, userRouter.handle)
+        // create db-adapter with the jsonSchema
+        const adapter = (this.adapter = new SqlAdapter({
+          modelName: 'items',
+          database,
+          jsonSchema: dbItemsSchema,
+          optimisticLocking: false,
+          instantDeletion: false
+        }))
+        await adapter.init({ client: this.client })
+        // define our rest-router based on the db-adapter
+        const userRouter = modelRouter({ adapter })
+        // mount it
+        const router = (options.router = new Router())
+        router.use(userRouter.mountPath, userRouter.handle)
 
-      // cleanup collection
-      await this.adapter.model.destroy({
-        where: {},
-        truncate: true
-      })
-    })
-
-    after(function () {
-      this.client.close()
-    })
-
-    testSet(options)
-  })
-
-  describe('SqlAdapter optimisticLocking=off instantDeletion=off', function () {
-    const options = {}
-
-    before(async function () {
-      // create a db connection (might be reused for various routers)
-      this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
-        host: SQLDB_HOST,
-        port: SQLDB_PORT,
-        dialect: SQLDB_DIALECT,
-        logging: false
-        // logging: (...msg) => console.dir(msg, { depth: null })
-        // logging: (...msg) => console.log(msg)
+        // cleanup collection
+        await this.adapter.model.destroy({
+          where: {},
+          truncate: true
+        })
       })
 
-      const database = 'test'
-      try {
-        const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
-          ? `CREATE DATABASE "${database}" DEFAULT CHARACTER SET = "utf8mb4" DEFAULT COLLATE = "utf8mb4_general_ci";`
-          : `CREATE DATABASE "${database}";`
-        await this.client.query(statement)
-      } catch (e) {
-        // console.error(e)
-      }
-
-      // create db-adapter with the jsonSchema
-      const adapter = (this.adapter = new SqlAdapter({
-        modelName: 'items',
-        database,
-        jsonSchema: dbItemsSchema,
-        optimisticLocking: false,
-        instantDeletion: false
-      }))
-      await adapter.init({ client: this.client })
-      // define our rest-router based on the db-adapter
-      const userRouter = modelRouter({ adapter })
-      // mount it
-      const router = (options.router = new Router())
-      router.use(userRouter.mountPath, userRouter.handle)
-
-      // cleanup collection
-      await this.adapter.model.destroy({
-        where: {},
-        truncate: true
+      after(function () {
+        this.client.close()
       })
-    })
 
-    after(function () {
-      this.client.close()
+      testSet(options)
     })
-
-    testSet(options)
   })
 })
