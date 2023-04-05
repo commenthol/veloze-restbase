@@ -92,7 +92,7 @@ export class SqlAdapter extends Adapter {
   async create (doc) {
     const result = await this._model.create(doc)
     if (!result?.dataValues) {
-      throw new HttpError(500, 'document creation failed')
+      throw new HttpError(400, 'document creation failed')
     }
     return nullToUndef(result.dataValues)
   }
@@ -109,7 +109,7 @@ export class SqlAdapter extends Adapter {
 
     const result = await this._model.update(_doc, { where: filter })
     if (!result) {
-      throw new HttpError(500, 'document update failed')
+      throw new HttpError(400, 'document update failed')
     } else if (result[0] !== 1) {
       throw new HttpError(409)
     }

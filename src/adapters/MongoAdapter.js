@@ -78,7 +78,7 @@ export class MongoAdapter extends Adapter {
   async create (doc) {
     const result = await this._model.insertOne({ ...doc })
     if (!result?.acknowledged) {
-      throw new HttpError(500, 'document creation failed')
+      throw new HttpError(400, 'document creation failed')
     }
     return doc
   }
@@ -100,7 +100,7 @@ export class MongoAdapter extends Adapter {
 
     const result = await this._model.updateOne(filter, { $set: _doc })
     if (!result?.acknowledged) {
-      throw new HttpError(500, 'document update failed')
+      throw new HttpError(400, 'document update failed')
     } else if (!result.modifiedCount) {
       throw new HttpError(409)
     }
