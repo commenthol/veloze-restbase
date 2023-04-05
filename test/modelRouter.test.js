@@ -9,6 +9,10 @@ import { SqlAdapter } from '../src/adapters/SqlAdapter.js'
 import { modelRouter } from '../src/index.js'
 import { Sequelize } from 'sequelize'
 import { dbItems, dbItemsSchema } from './fixtures/dbitems.js'
+import {
+  createDatabaseMariaDb,
+  createDatabasePostgres
+} from './support/sqlCreateDatabase.js'
 
 dotenv.config()
 
@@ -205,7 +209,7 @@ function testSet (options) {
           .post('/items')
           .type('json')
           .send(record)
-          .then(() => {})
+          .then(() => { })
       }
     })
 
@@ -218,7 +222,7 @@ function testSet (options) {
           assert.equal(body.limit, 100)
           assert.equal(body.count, undefined)
           assert.equal(Array.isArray(body.data), true)
-          assert.deepEqual(body.data.map(doc => doc.item).sort(), [
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), [
             'journal',
             'notebook',
             'paper',
@@ -238,7 +242,7 @@ function testSet (options) {
           assert.equal(body.limit, 100)
           assert.equal(body.count, 5)
           assert.equal(Array.isArray(body.data), true)
-          assert.deepEqual(body.data.map(doc => doc.item).sort(), [
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), [
             'journal',
             'notebook',
             'paper',
@@ -255,13 +259,11 @@ function testSet (options) {
         .expect(200)
         .then(({ body }) => {
           assert.equal(Array.isArray(body.data), true)
-          assert.deepEqual(body.data.map(doc => doc.item).sort(),
-            [
-              'notebook',
-              'paper',
-              'planner'
-            ]
-          )
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), [
+            'notebook',
+            'paper',
+            'planner'
+          ])
         })
     })
 
@@ -272,12 +274,10 @@ function testSet (options) {
         .expect(200)
         .then(({ body }) => {
           assert.equal(Array.isArray(body.data), true)
-          assert.deepEqual(body.data.map(doc => doc.item).sort(),
-            [
-              'journal',
-              'postcard'
-            ]
-          )
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), [
+            'journal',
+            'postcard'
+          ])
         })
     })
 
@@ -290,11 +290,7 @@ function testSet (options) {
         .expect(200)
         .then(({ body }) => {
           assert.equal(Array.isArray(body.data), true)
-          assert.deepEqual(body.data.map(doc => doc.item).sort(),
-            [
-              'paper'
-            ]
-          )
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), ['paper'])
         })
     })
 
@@ -305,12 +301,10 @@ function testSet (options) {
         .expect(200)
         .then(({ body }) => {
           assert.equal(Array.isArray(body.data), true)
-          assert.deepEqual(body.data.map(doc => doc.item).sort(),
-            [
-              'paper',
-              'planner'
-            ]
-          )
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), [
+            'paper',
+            'planner'
+          ])
         })
     })
 
@@ -332,32 +326,38 @@ function testSet (options) {
         .expect(200)
         .then(({ body }) => {
           assert.deepEqual(
-            body.data.map(({ item, width, height }) => ({ item, width, height })),
-            [{
-              height: 9,
-              item: 'notebook',
-              width: 11
-            },
-            {
-              height: 8.5,
-              item: 'paper',
-              width: 11
-            },
-            {
-              height: 10,
-              item: 'postcard',
-              width: 15.25
-            },
-            {
-              height: 14,
-              item: 'journal',
-              width: 21
-            },
-            {
-              height: 22.85,
-              item: 'planner',
-              width: 30
-            }]
+            body.data.map(({ item, width, height }) => ({
+              item,
+              width,
+              height
+            })),
+            [
+              {
+                height: 9,
+                item: 'notebook',
+                width: 11
+              },
+              {
+                height: 8.5,
+                item: 'paper',
+                width: 11
+              },
+              {
+                height: 10,
+                item: 'postcard',
+                width: 15.25
+              },
+              {
+                height: 14,
+                item: 'journal',
+                width: 21
+              },
+              {
+                height: 22.85,
+                item: 'planner',
+                width: 30
+              }
+            ]
           )
         })
     })
@@ -370,7 +370,7 @@ describe('modelRouter', function () {
       const options = {}
 
       before(async function () {
-      // create a db connection (might be reused for various routers)
+        // create a db connection (might be reused for various routers)
         this.client = new MongoClient(MONGODB_URL)
 
         const database = 'test'
@@ -378,7 +378,7 @@ describe('modelRouter', function () {
           const db = await this.client.db(database)
           db.createCollection('items')
         } catch (e) {
-        // console.error(e)
+          // console.error(e)
         }
 
         // create db-adapter with the jsonSchema
@@ -413,7 +413,7 @@ describe('modelRouter', function () {
       const options = {}
 
       before(async function () {
-      // create a db connection (might be reused for various routers)
+        // create a db connection (might be reused for various routers)
         this.client = new MongoClient(MONGODB_URL)
 
         const database = 'test'
@@ -421,7 +421,7 @@ describe('modelRouter', function () {
           const db = await this.client.db(database)
           db.createCollection('items')
         } catch (e) {
-        // console.error(e)
+          // console.error(e)
         }
 
         // create db-adapter with the jsonSchema
@@ -453,12 +453,50 @@ describe('modelRouter', function () {
   })
 
   describe('SqlAdapter', function () {
+    const database = 'test'
+
+    before(async function () {
+      if (SQLDB_DIALECT !== 'postgres') {
+        return
+      }
+      // eslint-disable-next-line eqeqeq
+      if (SQLDB_PORT == 26257) {
+        await createDatabasePostgres({
+          user: SQLDB_USER,
+          password: SQLDB_PASSWORD,
+          host: SQLDB_HOST,
+          port: SQLDB_PORT,
+          database: 'root'
+        })
+      }
+      await createDatabasePostgres({
+        user: SQLDB_USER,
+        password: SQLDB_PASSWORD,
+        host: SQLDB_HOST,
+        port: SQLDB_PORT,
+        database
+      })
+    })
+
+    before(async function () {
+      if (!['mariadb', 'mysql'].includes(SQLDB_DIALECT)) {
+        return
+      }
+      await createDatabaseMariaDb({
+        user: SQLDB_USER,
+        password: SQLDB_PASSWORD,
+        host: SQLDB_HOST,
+        port: SQLDB_PORT,
+        database
+      })
+    })
+
     describe('SqlAdapter optimisticLocking=true', function () {
       const options = {}
 
       before(async function () {
-      // create a db connection (might be reused for various routers)
-        this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
+        // create a db connection (might be reused for various routers)
+        this.client = new Sequelize(database, SQLDB_USER, SQLDB_PASSWORD, {
           host: SQLDB_HOST,
           port: SQLDB_PORT,
           dialect: SQLDB_DIALECT,
@@ -466,17 +504,6 @@ describe('modelRouter', function () {
           // logging: (...msg) => console.dir(msg, { depth: null })
           // logging: (...msg) => console.log(msg)
         })
-
-        // auto db creation does not (reliably) work
-        const database = 'test'
-        try {
-          const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
-            ? `CREATE DATABASE ${database} DEFAULT CHARACTER SET = utf8mb4 DEFAULT COLLATE = utf8mb4_general_ci;`
-            : `CREATE DATABASE ${database};`
-          await this.client.query(statement)
-        } catch (e) {
-          // console.error(e)
-        }
 
         // create db-adapter with the jsonSchema
         const adapter = (this.adapter = new SqlAdapter({
@@ -509,25 +536,15 @@ describe('modelRouter', function () {
       const options = {}
 
       before(async function () {
-      // create a db connection (might be reused for various routers)
-        this.client = new Sequelize('test', SQLDB_USER, SQLDB_PASSWORD, {
+        // create a db connection (might be reused for various routers)
+        this.client = new Sequelize(database, SQLDB_USER, SQLDB_PASSWORD, {
           host: SQLDB_HOST,
           port: SQLDB_PORT,
           dialect: SQLDB_DIALECT,
           logging: false
-        // logging: (...msg) => console.dir(msg, { depth: null })
-        // logging: (...msg) => console.log(msg)
+          // logging: (...msg) => console.dir(msg, { depth: null })
+          // logging: (...msg) => console.log(msg)
         })
-
-        const database = 'test'
-        try {
-          const statement = ['mariadb', 'mysql'].includes(SQLDB_DIALECT)
-            ? `CREATE DATABASE "${database}" DEFAULT CHARACTER SET = "utf8mb4" DEFAULT COLLATE = "utf8mb4_general_ci";`
-            : `CREATE DATABASE "${database}";`
-          await this.client.query(statement)
-        } catch (e) {
-        // console.error(e)
-        }
 
         // create db-adapter with the jsonSchema
         const adapter = (this.adapter = new SqlAdapter({
