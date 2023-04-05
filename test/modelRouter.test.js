@@ -214,6 +214,29 @@ function testSet (options) {
         .get('/items')
         .expect(200)
         .then(({ body }) => {
+          assert.equal(body.offset, 0)
+          assert.equal(body.limit, 100)
+          assert.equal(body.count, undefined)
+          assert.equal(Array.isArray(body.data), true)
+          assert.deepEqual(body.data.map(doc => doc.item).sort(), [
+            'journal',
+            'notebook',
+            'paper',
+            'planner',
+            'postcard'
+          ])
+        })
+    })
+
+    it('shall find all items with count', async function () {
+      await supertest(options.router.handle)
+        .get('/items')
+        .query({ countDocs: true })
+        .expect(200)
+        .then(({ body }) => {
+          assert.equal(body.offset, 0)
+          assert.equal(body.limit, 100)
+          assert.equal(body.count, 5)
           assert.equal(Array.isArray(body.data), true)
           assert.deepEqual(body.data.map(doc => doc.item).sort(), [
             'journal',

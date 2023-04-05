@@ -129,18 +129,25 @@ export class SqlAdapter extends Adapter {
    * find many items in database
    * @param {object} filter filter Rules for items
    * @param {object} findOptions
-   * @returns {Promise<object[]>} found items
+   * @returns {Promise<object>} found items
    */
   async findMany (filter, findOptions) {
+    const where = {
+      ...convertFilterRule(filter),
+      deletedAt: null
+    }
     const findFilter = {
       ...convertFindOptions(findOptions),
-      where: {
-        ...convertFilterRule(filter),
-        deletedAt: null
-      }
+      where
     }
     const results = await this._model.findAll(findFilter)
-    return toArray(results)
+    const obj = {
+      data: toArray(results)
+    }
+    if (findOptions.countDocs) {
+      obj.count = await this._model.count({ where })
+    }
+    return obj
   }
 
   async deleteById (id) {

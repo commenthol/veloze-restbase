@@ -140,10 +140,10 @@ export class Adapter {
    * find many documents in database
    * @param {object} filter filter Rules for items
    * @param {object} findOptions
-   * @returns {Promise<object[]>} found items
+   * @returns {Promise<object>} found items
    */
   async findMany (filter, findOptions) {
-    return []
+    return { count: undefined, data: [] }
   }
 
   /**

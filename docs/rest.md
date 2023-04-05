@@ -1,4 +1,3 @@
-
 # REST Router
 
 All collections / tables require a JSON schema for storing documents.
@@ -6,19 +5,23 @@ All collections / tables require a JSON schema for storing documents.
 Only flat objects can be stored and queries (for compatibility with relational
 databases).
 
-To uniquely identify a document an `id` is created when the record is created. With this the `createdAt` and `updatedAt` timestamps are set to now. 
-For optimistic locking (regardless if set in database-adapter) `version` is set to 1 and incremented on every update.
+To uniquely identify a document an `id` is created when the record is created.
+With this the `createdAt` and `updatedAt` timestamps are set to now.  
+For optimistic locking (regardless if set in database-adapter) `version` is set
+to 1 and incremented on every update.
 
-It is recommended to use plural names for `modelName`. E.g. use "users" instead of "user". Such the path to your model here would be "POST /users" to create a new document in the database.
+It is recommended to use plural names for `modelName`. E.g. use "users" instead
+of "user". Such the path to your model here would be "POST /users" to create a
+new document in the database.
 
 **Table of Contents**
 
 <!-- !toc (minlevel=2) -->
 
-* [POST /{modelName}&nbsp;](#post-modelname)
-* [PUT /{modelName}/:id](#put-modelnameid)
-* [DELETE /{modelName}/:id](#delete-modelnameid)
-* [GET /{modelName}/:id](#get-modelnameid)
+- [POST /{modelName}&nbsp;](#post-modelname)
+- [PUT /{modelName}/:id](#put-modelnameid)
+- [DELETE /{modelName}/:id](#delete-modelnameid)
+- [GET /{modelName}/:id](#get-modelnameid)
 
 <!-- toc! -->
 
@@ -87,13 +90,15 @@ Delete a document with `id`.
 
 By default documents are deleted immediately.
 
-If using `instantDelete=false` through the database-adapter the document is only marked as deleted by setting a `deletedAt` timestamp. 
+If using `instantDelete=false` through the database-adapter the document is only
+marked as deleted by setting a `deletedAt` timestamp.
 
-This requires latter data removal via e.g. cron-jobs to remove the deleted documents from the database.
+This requires latter data removal via e.g. cron-jobs to remove the deleted
+documents from the database.
 
 **Returns:**
 
-- 204 No Content 
+- 204 No Content
 
   Document deleted
 
@@ -107,7 +112,7 @@ Finds documents by its id.
 
 **Returns:**
 
-- 200 OK 
+- 200 OK
 
   The found document.
 
@@ -136,13 +141,13 @@ query parameters
 
 ### Query Operators numeric
 
-| operator | description 
-| -------- | ----------- 
-| $gt      | Matches values that are greater than a specified value. 
-| $gte     | Matches values that are greater than or equal to a specified value. 
-| $lt      | Matches values that are less than a specified value. 
-| $lte     | Matches values that are less than or equal to a specified value. 
-| $ne      | Matches all values that are not equal to a specified value. 
+| operator | description                                                         |
+| -------- | ------------------------------------------------------------------- |
+| $gt      | Matches values that are greater than a specified value.             |
+| $gte     | Matches values that are greater than or equal to a specified value. |
+| $lt      | Matches values that are less than a specified value.                |
+| $lte     | Matches values that are less than or equal to a specified value.    |
+| $ne      | Matches all values that are not equal to a specified value.         |
 
 **Examples**
 
@@ -156,24 +161,27 @@ GET ?height%24ne=17
 
 ### Query Operators string
 
-| operator | description
-| -------- | -----------
-| $starts  | starts-with search
-| $like    | contains
-| $ends    | ends-with search
-| $cs      | (modifier) case sensitive search
-| $not     | (modifier) inverse search e.g. `field$not$like=foobar`
+| operator | description                                            |
+| -------- | ------------------------------------------------------ |
+| $starts  | starts-with search                                     |
+| $like    | contains                                               |
+| $ends    | ends-with search                                       |
+| $cs      | (modifier) case sensitive search                       |
+| $not     | (modifier) inverse search e.g. `field$not$like=foobar` |
 
 > **⚠️ NOTE:** Case (in-)sensitive search may not work for all database
-> adapters. Please consider setting the correct collation. 
-> E.g. for [postgres](https://www.postgresql.org/docs/current/collation.html#COLLATION-NONDETERMINISTIC) choose 
+> adapters. Please consider setting the correct collation.
+> E.g. for [postgres](https://www.postgresql.org/docs/current/collation.html#COLLATION-NONDETERMINISTIC) choose
+>
 > ```sql
 > CREATE COLLATION case_insensitive (provider = icu, locale = 'und-u-ks-level2', deterministic = false);
 > ```
+>
 > E.g. for mariadb, mysql
+>
 > ```sql
 > ALTER TABLE mytable
-> CONVERT TO CHARACTER SET utf8mb4 
+> CONVERT TO CHARACTER SET utf8mb4
 > COLLATE utf8mb4_general_ci; -- *_ci = case insensitive
 > ```
 
@@ -182,30 +190,30 @@ GET ?height%24ne=17
 ```js
 // search all `item`s which do not contain `paper` case-insensitive
 GET ?item%24not%24like=paper
- 
+
 // search all `article`s which starts-with `Jacket` case-sensitive
 GET ?article%24starts%24cs=Jacket
 ```
 
-### Query Parameters 
+### Query Parameters
 
-| param        | type     | description
-| ------------ | -------- | -----------
-| offset       | integer  | pagination offset
-| limit        | integer  | pagination limit or size (defaults to 100 documents)
-| includeCount | boolean  | Include total document count in response. <br>Requires `?includeCount=true` being set.  
-| fields       | string[] | comma separated list of schema properties which shall be returned
-| sort         | string[] | comma separated list of schema properties for sorting. <br>Needs `$desc` operator for descending sort. <br>Defaults to ascending sort.
+| param    | type     | description                                                                                                                            |
+| -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| offset   | integer  | pagination offset                                                                                                                      |
+| limit    | integer  | pagination limit or size (defaults to 100 documents)                                                                                   |
+| countDocs | boolean  | Include document count in response.                                                  |
+| fields   | string[] | comma separated list of schema properties which shall be returned                                                                      |
+| sort     | string[] | comma separated list of schema properties for sorting. <br>Needs `$desc` operator for descending sort. <br>Defaults to ascending sort. |
 
 > **⚠️ NOTE:** Avoid using the params as document properties. You won't be able to
-query for any of these doc properties then. 
+> query for any of these doc properties then.
 
 **Examples**
 
 ```js
 // get the 2nd page for a page which contains 100 documents
-GET ?offset=100&limit=100&includeCount=true
- 
+GET ?offset=100&limit=100&countDocs=true
+
 // get back only { id, version, item } properties from the query
 GET ?fields=id,version,item
 
@@ -213,18 +221,17 @@ GET ?fields=id,version,item
 GET ?sort=price,date%24desc
 ```
 
-
 **Returns:**
 
-- 200 OK 
+- 200 OK
 
-  The found documents. 
+  The found documents.
 
   ```js
   {
     "offset": integer,
     "limit": integer,
-    "count": integer, // only for &includeCount=true
+    "count": integer, // only for &countDocs=true
     "data": [ // the found documents
       {
         "id": string,
@@ -242,7 +249,8 @@ GET ?sort=price,date%24desc
   Reason: Validation errors on provided query parameters
 
   E.g. `GET /{modelName}?foobar=1` where `foobar` is not a valid document property, will respond with:
-  ```js 
+
+  ```js
   {
     "status": 400,
     "message": "validation error",

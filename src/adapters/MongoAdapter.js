@@ -128,7 +128,7 @@ export class MongoAdapter extends Adapter {
    * @see https://www.mongodb.com/docs/v6.0/tutorial/query-documents/
    * @param {object} filter filter Rules for items
    * @param {object} findOptions
-   * @returns {Promise<object[]>} found items
+   * @returns {Promise<object>} found items
    */
   async findMany (filter, findOptions) {
     const _filter = {
@@ -137,8 +137,12 @@ export class MongoAdapter extends Adapter {
     }
     const _findOptions = convertFindOptions(findOptions)
     const cursor = await this._model.find(_filter, _findOptions)
-    const data = await cursor.toArray()
-    return data
+    const obj = {}
+    obj.data = await cursor.toArray()
+    if (findOptions.countDocs) {
+      obj.count = await this._model.countDocuments(_filter)
+    }
+    return obj
   }
 
   /**
@@ -170,7 +174,7 @@ export class MongoAdapter extends Adapter {
 
 /**
  * @param {object} filterRule
- * @returns {object} mongo filter 
+ * @returns {object} mongo filter
  */
 const convertFilterRule = (filterRule) => {
   const filter = {}

@@ -63,7 +63,11 @@ export type MongoClientUri = {
     randomUuid: Function;
 };
 import { Adapter } from './Adapter.js';
-declare function convertFilterRule(filterRule: any): {};
+/**
+ * @param {object} filterRule
+ * @returns {object} mongo filter
+ */
+declare function convertFilterRule(filterRule: object): object;
 /**
  * @see https://www.mongodb.com/docs/v6.0/reference/command/find/#std-label-find-cmd-sort
  * @param {{

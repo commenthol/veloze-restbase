@@ -52,7 +52,7 @@ const OPERATORS = {
   string: STRING_OPS
 }
 
-const NO_OPERATOR_PROPS = ['offset', 'limit', 'fields', 'sort']
+const NO_OPERATOR_PROPS = ['offset', 'limit', 'fields', 'sort', 'countDocs']
 
 const OP_SEP = '$'
 
@@ -78,6 +78,9 @@ export const getQuerySchema = (schema) => {
         type: 'integer',
         exclusiveMinimum: -1
       },
+      countDocs: {
+        type: 'boolean'
+      },
       fields: {
         type: 'array',
         items: {
@@ -87,9 +90,6 @@ export const getQuerySchema = (schema) => {
       },
       sort: {
         type: 'string'
-      },
-      includeCount: { // TODO: implement
-        type: 'boolean'
       }
     }
   }

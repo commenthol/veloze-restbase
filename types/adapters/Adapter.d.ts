@@ -51,9 +51,9 @@ export class Adapter {
      * find many documents in database
      * @param {object} filter filter Rules for items
      * @param {object} findOptions
-     * @returns {Promise<object[]>} found items
+     * @returns {Promise<object>} found items
      */
-    findMany(filter: object, findOptions: object): Promise<object[]>;
+    findMany(filter: object, findOptions: object): Promise<object>;
     /**
      * delete document from database
      * @param {string} id

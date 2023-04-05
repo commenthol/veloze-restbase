@@ -123,8 +123,7 @@ export class ModelAdapter {
 
     const data = await this._adapter.findMany(filter, findOptions)
     const { offset, limit } = findOptions
-
-    return { offset, limit, data }
+    return { offset, limit, count: data?.count, data: data?.data }
   }
 
   /**

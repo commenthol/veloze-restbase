@@ -64,6 +64,19 @@ describe('utils/query', function () {
       const { errors } = querySchema.validate({ width: '10a' })
       assert.deepEqual(errors, { width: 'must be number' })
     })
+
+    it('countDocs=true', function () {
+      const { errors, validated } = querySchema.validate({ countDocs: 'true' })
+      assert.deepEqual(errors, undefined)
+      assert.deepEqual(validated, {
+        countDocs: true
+      })
+    })
+
+    it('countDocs=10', function () {
+      const { errors } = querySchema.validate({ countDocs: 10 })
+      assert.deepEqual(errors, { countDocs: 'must be boolean' })
+    })
   })
 
   describe('getFilterRule', function () {
@@ -71,6 +84,7 @@ describe('utils/query', function () {
       const reqQuery = {
         offset: '20',
         limit: '200',
+        countDocs: 'true',
         sort: 'item,status$desc',
         fields: 'item,width',
         item$not$like: 'pap',
@@ -109,6 +123,7 @@ describe('utils/query', function () {
         }
       })
       assert.deepEqual(result.findOptions, {
+        countDocs: true,
         fields: ['item', 'width'],
         offset: 20,
         limit: 200,
