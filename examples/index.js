@@ -1,10 +1,14 @@
 /**
  * example requires to have a mongo database up and running
  *
- * run with docker-compose...
- * ```
+ * ```sh
+ * # start database with docker-compose
  * npm run dcup -- mongodb
  * docker ps
+ * # run server (this file)
+ * node examples/index.js
+ * # make some traffic
+ * node examples/traffic.js
  * ```
  */
 

@@ -12,49 +12,67 @@ import { DAY } from '../constants.js'
 const MIN_SAFE_INTEGER = -2147483647 // (1 << 31)
 const MAX_SAFE_INTEGER = 2147483647 // ~(1 << 31)
 
-const log = logger('sqladapter')
+const log = logger('SqlAdapter')
 
 const isNumber = (num) => num !== undefined && !isNaN(Number(num))
 const isSafeInt = (num) =>
   isNumber(num) && num < MAX_SAFE_INTEGER && num > MIN_SAFE_INTEGER
 
 /**
+ * @typedef {import('../types').Index} Index
+ *//**
+ * @typedef {object} SqlInitOptions
+ * @property {import('sequelize').Sequelize} client
+ * @property {Index} [indexes]
+ *//**
+ * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
+ *//**
+ * @typedef {object} SqlAdapterOptionsExt
+ * @property {string} database database name
+ *//**
+ * @typedef {AdapterOptions & SqlAdapterOptionsExt & SqlInitOptions} SqlAdapterOptions
+ */
+
+/**
  * @see https://sequelize.org/docs/v6/
  */
 export class SqlAdapter extends Adapter {
+  /**
+   * @param {SqlAdapterOptions} options
+   */
   constructor (options) {
     const {
       modelName,
       jsonSchema,
       optimisticLocking,
       instantDeletion,
-      client
+      client,
+      indexes
     } = options
 
     super({ modelName, jsonSchema, optimisticLocking, instantDeletion })
     if (client) {
-      this.init({ client })
+      this.init({ client, indexes }).catch(err => log.error(err))
     }
     this.adapterType = 'sequelize'
   }
 
-  get model () {
-    return this._model
-  }
-
+  /**
+   * @param {SqlInitOptions} options
+   */
   async init (options) {
-    const { client } = options
+    const { client, indexes = [] } = options
     await client.authenticate()
 
     const _schema = merge.all([
       schemaToModel(this.schema),
       {
         id: {
+          type: DataTypes.STRING,
           primaryKey: true
         },
         version: {
-          type: DataTypes.INTEGER,
-          index: true
+          type: DataTypes.INTEGER
         },
         updatedAt: {
           type: DataTypes.DATE
@@ -67,16 +85,17 @@ export class SqlAdapter extends Adapter {
         }
       }
     ])
-    log.debug(_schema)
+    log.debug('schema: %j', _schema)
 
-    const indexes = [
-      {
-        fields: ['version']
-      }
+    const _indexes = [
+      { fields: ['version'] },
+      // @ts-ignore
+      ...indexes
     ]
 
+    // @ts-expect-error
     this._model = client.define(this.modelName, _schema, {
-      indexes,
+      indexes: _indexes,
       tableName: this.modelName,
       timestamps: false
     })
@@ -84,11 +103,6 @@ export class SqlAdapter extends Adapter {
     await client.sync()
   }
 
-  /**
-   * create doc in database
-   * @param {object} doc
-   * @returns {Promise<object>} created doc
-   */
   async create (doc) {
     const result = await this._model.create(doc)
     if (!result?.dataValues) {
@@ -125,12 +139,6 @@ export class SqlAdapter extends Adapter {
     return nullToUndef(result.dataValues)
   }
 
-  /**
-   * find many items in database
-   * @param {object} filter filter Rules for items
-   * @param {object} findOptions
-   * @returns {Promise<object>} found items
-   */
   async findMany (filter, findOptions) {
     const where = {
       ...convertFilterRule(filter),

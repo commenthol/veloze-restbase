@@ -1,21 +1,23 @@
 /**
- * @typedef {object} MongoInitOptions
- * @property {import('mongodb/mongodb').MongoClient} [client]
- * @property {object} [index]
- *
- * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
- *
- * @typedef {object} MongoAdapterOptionsExt
- * @property {string} database database name
- *
- * @typedef {AdapterOptions & MongoAdapterOptionsExt & MongoInitOptions} MongoAdapterOptions
- *
- * @typedef {object} MongoClientUri
- * @property {string} uri
- * @property {string} database
- * @property {object[]} index MongoDb Database Index https://www.mongodb.com/basics/database-index
- * @property {function} randomUuid random id generation function
- */
+ * @typedef {import('../types').Index} Index
+ */ /**
+* @typedef {object} MongoInitOptions
+* @property {import('mongodb/mongodb').MongoClient} [client]
+* @property {Index} [indexes]
+*/ /**
+* @typedef {import('./Adapter').AdapterOptions} AdapterOptions
+*/ /**
+* @typedef {object} MongoAdapterOptionsExt
+* @property {string} database database name
+*/ /**
+* @typedef {AdapterOptions & MongoAdapterOptionsExt & MongoInitOptions} MongoAdapterOptions
+*/ /**
+* @typedef {object} MongoClientUri
+* @property {string} uri
+* @property {string} database
+* @property {object[]} index MongoDb Database Index https://www.mongodb.com/basics/database-index
+* @property {function} randomUuid random id generation function
+*/
 /**
  * @see https://www.mongodb.com/docs/drivers/node/current/usage-examples/
  */
@@ -30,6 +32,12 @@ export class MongoAdapter extends Adapter {
      * @param {MongoInitOptions} options
      */
     init(options: MongoInitOptions): Promise<void>;
+    create(doc: any): Promise<any>;
+    update(doc: any): Promise<any>;
+    findById(id: any): Promise<any>;
+    deleteById(id: any): Promise<{
+        deletedCount: any;
+    }>;
     deleteDeleted(date: any): Promise<{
         deletedCount: any;
     }>;
@@ -38,9 +46,10 @@ export namespace MongoAdapter {
     export { convertFilterRule };
     export { convertFindOptions };
 }
+export type Index = import('../types').Index;
 export type MongoInitOptions = {
     client?: import("mongodb").MongoClient | undefined;
-    index?: object;
+    indexes?: import("../types").Index | undefined;
 };
 export type AdapterOptions = import('./Adapter').AdapterOptions;
 export type MongoAdapterOptionsExt = {

@@ -1,20 +1,24 @@
 import { Adapter } from './Adapter.js'
 import { HttpError } from 'veloze'
-import { escapeRegExp } from '../utils/index.js'
+import { escapeRegExp, logger } from '../utils/index.js'
 import { DAY } from '../constants.js'
 
+const log = logger('MongoAdapter')
+
 /**
+ * @typedef {import('../types').Index} Index
+ *//**
  * @typedef {object} MongoInitOptions
  * @property {import('mongodb/mongodb').MongoClient} [client]
- * @property {object} [index]
- *
+ * @property {Index} [indexes]
+ *//**
  * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
- *
+ *//**
  * @typedef {object} MongoAdapterOptionsExt
  * @property {string} database database name
- *
+ *//**
  * @typedef {AdapterOptions & MongoAdapterOptionsExt & MongoInitOptions} MongoAdapterOptions
- *
+ *//**
  * @typedef {object} MongoClientUri
  * @property {string} uri
  * @property {string} database
@@ -36,7 +40,8 @@ export class MongoAdapter extends Adapter {
       optimisticLocking,
       instantDeletion,
       database,
-      client
+      client,
+      indexes
     } = options
 
     if (!database) {
@@ -47,34 +52,41 @@ export class MongoAdapter extends Adapter {
     this.adapterType = 'mongo'
     this._database = database
     if (client) {
-      this.init({ client })
+      this.init({ client, indexes }).catch(err => log.error(err))
     }
-  }
-
-  get model () {
-    return this._model
   }
 
   /**
    * @param {MongoInitOptions} options
    */
   async init (options) {
-    const { client } = options
+    const { client, indexes = [] } = options
     // @ts-expect-error
     this._model = client.db(this._database).collection(this.modelName)
+    // always create index on id and version
 
-    // TODO: do index creation outside!
-    // for (const [fields, options] of index) {
-    //   await this._model.createIndex(fields, { background: true, ...options })
-    // }
-    // await this._model.createIndex({ id: 1 }, { background: true, unique: true })
+    const _indexes = [
+      { fields: ['id'], unique: true },
+      { fields: ['version'] },
+      // @ts-ignore
+      ...indexes
+    ]
+
+    for (const { fields, ...options } of _indexes) {
+      const _fields = fields.reduce((curr, field) => {
+        if (typeof field === 'object') {
+          Object.assign(curr, field)
+        } else {
+          curr['' + field] = 1
+        }
+        return curr
+      }, {})
+      log.debug('createIndex(%j, %j)', _fields, options)
+
+      await this._model.createIndex(_fields, { background: true, ...options })
+    }
   }
 
-  /**
-   * create doc in database
-   * @param {object} doc
-   * @returns {Promise<object>} created doc
-   */
   async create (doc) {
     const result = await this._model.insertOne({ ...doc })
     if (!result?.acknowledged) {
@@ -83,11 +95,6 @@ export class MongoAdapter extends Adapter {
     return doc
   }
 
-  /**
-   * update doc in database
-   * @param {object} doc
-   * @returns {Promise<object>} updated doc
-   */
   async update (doc) {
     const { id, updatedAt, version, ..._doc } = doc
     const filter = { id, deletedAt: { $exists: false } }
@@ -107,11 +114,6 @@ export class MongoAdapter extends Adapter {
     return { id, ..._doc }
   }
 
-  /**
-   * find one doc in database by id
-   * @param {string} id
-   * @returns {Promise<object>} found doc
-   */
   async findById (id) {
     const result = await this._model.findOne(
       { id, deletedAt: { $exists: false } },
@@ -145,11 +147,6 @@ export class MongoAdapter extends Adapter {
     return obj
   }
 
-  /**
-   * delete document from database
-   * @param {string} id
-   * @returns {Promise<object>} deleted stats
-   */
   async deleteById (id) {
     const result = this.instantDeletion
       ? await this._model.deleteOne({ id })
@@ -179,7 +176,7 @@ export class MongoAdapter extends Adapter {
 const convertFilterRule = (filterRule) => {
   const filter = {}
   for (const [field, rules] of Object.entries(filterRule)) {
-    /* c8 ignore next 3 */
+    /* c8 ignore next 4 */
     if (typeof rules !== 'object') {
       filter[field] = rules
       continue

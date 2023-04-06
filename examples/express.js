@@ -1,11 +1,15 @@
 /**
  * example requires to have a postgres database up and running
  *
- * run with docker-compose...
- * ```
+ * ```sh
+ * # start database with docker-compose
  * npm run dcup -- postgres
  * docker ps
- * ```
+ * # run server (this file)
+ * node examples/express.js
+ * # make some traffic
+ * node examples/traffic.js
+* ```
  */
 
 import dotenv from 'dotenv'

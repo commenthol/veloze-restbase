@@ -17,7 +17,7 @@ Provides database adapters for:
 - [mongodb](https://www.mongodb.com/docs/drivers/node/current/)
 - mysql, mysql, postgres, cockroach via [sequelize](https://sequelize.org/)
 
-Works with express like routers.
+Works also with express like routers.
 
 # Usage
 
@@ -79,8 +79,8 @@ npm i
 npm run dcup -- mongodb
 # start the server
 node examples/index.js
-# make some noise (aka traffic...)
-node examples/test.js
+# make some noise
+node examples/traffic.js
 ```
 
 # License

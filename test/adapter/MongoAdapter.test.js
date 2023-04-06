@@ -4,6 +4,29 @@ import { MongoAdapter } from '../../src/adapters/MongoAdapter.js'
 const { convertFilterRule, convertFindOptions } = MongoAdapter
 
 describe('adapters/MongoAdapter', function () {
+  describe('general', function () {
+    it('shall throw if there is no database name', function () {
+      assert.throws(() => {
+        // eslint-disable-next-line no-new
+        new MongoAdapter({})
+      }, (err) => err.message === 'need database')
+    })
+
+    it('shall throw if there is no modelName name', function () {
+      assert.throws(() => {
+        // eslint-disable-next-line no-new
+        new MongoAdapter({ database: 'test' })
+      }, (err) => err.message === 'need modelName')
+    })
+
+    it('shall throw if there is no jsonSchema name', function () {
+      assert.throws(() => {
+        // eslint-disable-next-line no-new
+        new MongoAdapter({ database: 'test', modelName: 'tests' })
+      }, (err) => err.message === 'need jsonSchema')
+    })
+  })
+
   describe('convertFilterRule()', function () {
     describe('sting operators', function () {
       const VALUE = 'vAluE$'

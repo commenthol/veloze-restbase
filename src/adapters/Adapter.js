@@ -115,6 +115,7 @@ export class Adapter {
    * @param {object} doc
    * @returns {Promise<object>} created doc
    */
+  /* c8 ignore next 3 */
   async create (doc) {
     return doc
   }
@@ -124,6 +125,7 @@ export class Adapter {
    * @param {object} doc
    * @returns {Promise<object>} updated doc
    */
+  /* c8 ignore next 3 */
   async update (doc) {
     return doc
   }
@@ -133,7 +135,9 @@ export class Adapter {
    * @param {string} id
    * @returns {Promise<object>} found doc
    */
+  /* c8 ignore next 3 */
   async findById (id) {
+    return {}
   }
 
   /**
@@ -142,6 +146,7 @@ export class Adapter {
    * @param {object} findOptions
    * @returns {Promise<object>} found items
    */
+  /* c8 ignore next 3 */
   async findMany (filter, findOptions) {
     return { count: undefined, data: [] }
   }
@@ -151,7 +156,9 @@ export class Adapter {
    * @param {string} id
    * @returns {Promise<object>} deleted stats
    */
+  /* c8 ignore next 3 */
   async deleteById (id) {
+    return {}
   }
 
   /**
@@ -159,6 +166,8 @@ export class Adapter {
    * @param {Date} [date] defaults to Date.now() - 30d
    * @returns {Promise<object>} deleted stats
    */
+  /* c8 ignore next 3 */
   async deleteDeleted (date) {
+    return {}
   }
 }
