@@ -46,29 +46,29 @@
     "ajv-formats": "^2.1.1",
     "debug-level": "^3.0.0",
     "deepmerge": "^4.3.1",
-    "sequelize": "^6.30.0",
-    "veloze": "*"
+    "sequelize": "^6.31.0",
+    "veloze": "^0.4.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.10",
+    "@types/node": "^18.15.11",
     "c8": "^7.13.0",
     "conv-changelog": "^0.1.0",
     "dotenv": "^16.0.3",
-    "eslint": "^8.36.0",
+    "eslint": "^8.38.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
     "express": "^4.18.2",
     "mariadb": "^3.1.1",
     "mocha": "^10.2.0",
-    "mongodb": "^5.1.0",
+    "mongodb": "^5.2.0",
     "npm-run-all": "^4.1.5",
     "pg": "^8.10.0",
-    "rimraf": "^4.4.1",
+    "rimraf": "^5.0.0",
     "shelljs": "^0.8.5",
     "supertest": "^6.3.3",
-    "typescript": "^5.0.2"
+    "typescript": "^5.0.4"
   },
   "engines": {
     "node": ">=18"
