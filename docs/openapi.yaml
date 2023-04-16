@@ -1,30 +1,369 @@
-openapi: '3.0.2'
+# https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md
+openapi: '3.0.3'
 info:
-  version: '1.0'
-  title: restbase
+  version: '1.0.0'
+  title: veloze-restbase
+  description: |-
+    Blueprint for OpenAPI specification
 servers:
-  - url: https://api.server.test/v1
+  - url: https://api.server.test/v1/docs
+
 paths:
   /:
     get:
+      summary: find documents
+      description: |-
+        find documents
+
+        ### Query Operators numeric
+
+        For properties with numeric tye the following operators can be applied:
+
+        | operator | description                                                         |
+        | -------- | ------------------------------------------------------------------- |
+        | $gt      | Matches values that are greater than a specified value.             |
+        | $gte     | Matches values that are greater than or equal to a specified value. |
+        | $lt      | Matches values that are less than a specified value.                |
+        | $lte     | Matches values that are less than or equal to a specified value.    |
+        | $ne      | Matches all values that are not equal to a specified value.         |
+
+        **Examples**
+
+        ```js
+        // 10 < width <= 15
+        GET ?width%24gt=10&width%24lte=15
+
+        // height !== 17
+        GET ?height%24ne=17
+        ```
+
+        ### Query Operators string
+
+        For properties with string tye the following operators can be applied:
+
+        | operator | description                                            |
+        | -------- | ------------------------------------------------------ |
+        | $starts  | starts-with search                                     |
+        | $like    | contains                                               |
+        | $ends    | ends-with search                                       |
+        | $cs      | (modifier) case sensitive search                       |
+        | $not     | (modifier) inverse search e.g. `field$not$like=foobar` |      
+
+        > **⚠️ NOTE:** Case (in-)sensitive search may not work for all database
+        > adapters. Please consider setting the correct collation.
+
+        **Examples**
+
+        ```js
+        // search all `item`s which do not contain `paper` case-insensitive
+        GET ?item%24not%24like=paper
+
+        // search all `article`s which starts-with `Jacket` case-sensitive
+        GET ?article%24starts%24cs=Jacket
+        ```
+      parameters:
+        - name: id
+          description: |-
+            Find documents by id. <br>
+            May be a string or a comma separated list of ids.
+          in: query
+          schema:
+            type: string
+          style: form
+        # - name: property
+        #   description: todo
+        #   in: query
+        #   schema:
+        #     type: string
+        - name: offset
+          description: Pagination offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          example: 0
+        - name: limit
+          description: |-
+            Pagination limit
+
+            if 0 then all documents are returned.
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 100
+          example: 100
+        - name: countDocs
+          description: |-
+            Include document count in response
+          in: query
+          schema:
+            type: boolean
+        - name: fields
+          description: |-
+            Comma separated list of schema properties which shall be returned
+          in: query
+          style: form
+          schema:
+            type: string
+          example: id,version,createdAt
+        - name: sort
+          description: |-
+            Comma separated list of schema properties for sorting.
+
+            Needs `$desc` operator for descending sort. <br>
+            Defaults to ascending sort.
+          in: query
+          style: form
+          schema:
+            type: string
+          example: version$desc,name
       responses:
         '200':
-          description: OK
+          description: |-
+            OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  offset:
+                    description: |- 
+                      pagination offset
+                    type: integer
+                    minimum: 0
+                  limit:
+                    description: |- 
+                      pagination limit
+                    type: integer
+                    minimum: 0
+                    default: 100
+                  count: 
+                    description: |-
+                      document count
+
+                      requires `&countDocs=true`.
+                    type: integer
+                    minimum: 0
+                    example: 42
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '400': 
+          description: |-
+            Bad Content
+
+            Schema check on provided query parameters failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                reqId: cb993711-8395-4269-a2a8-f481fbeda243
+                status: 400
+                message: validation error
+                errors:
+                  foo: unsupported property
     post:
+      summary: create new document
+      description: |-
+        create a new document
+      
+      requestBody:
+        description: |-
+          Do not provide `id`, `version`, `createdAt` property. This is handled by the service.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Document'
+            example: {}
       responses:
         '201':
           description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: |- 
+            Bad Content
+
+            Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                reqId: 3b1123ca-43d6-45d2-95a0-f2f09ba778fc
+                status: 400
+                message: validation error
+                errors:
+                  quantity: must be integer
+                  item: must have required property 'item'
   /{id}:
     get:
+      summary: get document by id
+      description: |-
+        get a document by id
+      parameters:
+        - name: id
+          description: document id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
+      summary: update document by id
+      description: |-
+        update document by id
+      parameters:
+        - name: id
+          description: document id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |-
+          The current `version` property must be provided. Otherwise Optimistic Locking will always fail.
+
+          Provide all "required" parameters.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Document'
+            example:
+              id: sA2hGb4ziJjL2Q6K9AqMJK4l
+              version: 2
       responses:
         '200':
-          description: OK
+          description: |- 
+            OK
+
+            the updated document is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: |- 
+            Bad Content
+
+            Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                reqId: 3b1123ca-43d6-45d2-95a0-f2f09ba778fc
+                status: 400
+                message: validation error
+                errors:
+                  quantity: must be integer
+                  item: must have required property 'item'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: |-
+            Conflict
+
+            Document could not be updated. The document might have been updated
+            in the meantime.
+
+            Fetch the document with GET /{id} and resolve
+            the conflict before updating again,
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                reqId: 3b1123ca-43d6-45d2-95a0-f2f09ba778fc
+                status: 409
+                message: Conflict
     delete:
+      summary: delete document by id
+      description: |-
+        delete a document by document id
+      parameters:
+        - name: id
+          description: document id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '204':
           description: No Content
-
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Document:
+      description: schema definition
+      type: object
+      properties:
+        id:
+          description: document id
+          type: string
+          example: sA2hGb4ziJjL2Q6K9AqMJK4l
+        version:
+          description: document version
+          type: integer
+          example: 2
+        createdAt:
+          description: document creation timestamp
+          type: string
+          format: date-time
+          example: 2023-04-14T07:40:46.562Z
+        updatedAt:
+          description: document update timestamp
+          type: string
+          format: date-time
+          example: 2023-04-16T07:40:46.562Z
+    Error:
+      type: object
+      required:
+        - id
+        - status
+        - message
+      properties:
+        reqId:
+          description: correlation id from request
+          type: string
+        status:
+          description: response status code
+          type: integer
+          minimum: 400
+          maximum: 504
+        message:
+          description: error message
+          type: string
+        errors:
+          description: validation error info
+          type: object
+      example:
+        reqId: 10752dee-0144-4632-8b8b-164bb1bce0aa
+        status: 404
+        message: Not Found
