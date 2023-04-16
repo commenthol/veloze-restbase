@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import { DataTypes, Op } from 'sequelize'
 import { SqlAdapter } from '../../src/adapters/SqlAdapter.js'
 
@@ -467,6 +467,19 @@ describe('adapters/SqlAdapter', function () {
           }),
           {
             num: { [Op.lte]: 10, [Op.gt]: 5 }
+          }
+        )
+      })
+    })
+
+    describe('array', function () {
+      it('query for multiple fields', function () {
+        assert.deepStrictEqual(
+          convertFilterRule({
+            id: { eq: ['10', '12', '14'], type: 'array' }
+          }),
+          {
+            [Op.and]: [{ [Op.or]: [{ id: '10' }, { id: '12' }, { id: '14' }] }]
           }
         )
       })

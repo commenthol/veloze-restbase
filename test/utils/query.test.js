@@ -180,6 +180,17 @@ describe('utils/query', function () {
       })
     })
 
+    it('id=10,,12, ,14', function () {
+      const reqQuery = { id: '10,,12, ,14' }
+      const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
+      assert.deepEqual(result.filter, {
+        id: {
+          eq: ['10', '12', '14'],
+          type: 'array'
+        }
+      })
+    })
+
     describe('string variations', function () {
       const jsonSchema = {
         type: 'object',

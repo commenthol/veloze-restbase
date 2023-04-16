@@ -202,6 +202,8 @@ function testSet (options) {
   })
 
   describe('find', function () {
+    const cache = {}
+
     before(async function () {
       for (const record of dbItems) {
         // console.log(record)
@@ -218,6 +220,7 @@ function testSet (options) {
         .get('/items')
         .expect(200)
         .then(({ body }) => {
+          cache.data = body.data
           assert.equal(body.offset, 0)
           assert.equal(body.limit, 100)
           assert.equal(body.count, undefined)
@@ -228,6 +231,26 @@ function testSet (options) {
             'paper',
             'planner',
             'postcard'
+          ])
+        })
+    })
+
+    it('shall find multiple ids', async function () {
+      assert.ok(cache.data, 'needs previous test')
+      const id = cache.data.map(({ id }) => id).filter((id, i) => i % 2)
+      await supertest(options.router.handle)
+        .get('/items')
+        .query({ id: id.join(',') })
+        .expect(200)
+        .then(({ body }) => {
+          // console.log(body)
+          assert.equal(body.offset, 0)
+          assert.equal(body.limit, 100)
+          assert.equal(body.count, undefined)
+          assert.equal(Array.isArray(body.data), true)
+          assert.deepEqual(body.data.map((doc) => doc.item).sort(), [
+            'notebook',
+            'planner'
           ])
         })
     })

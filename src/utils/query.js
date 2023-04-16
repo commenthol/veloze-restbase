@@ -90,6 +90,12 @@ export const getQuerySchema = (schema) => {
       },
       sort: {
         type: 'string'
+      },
+      id: {
+        type: 'array',
+        items: {
+          type: 'string'
+        }
       }
     }
   }
@@ -100,9 +106,11 @@ export const getQuerySchema = (schema) => {
 
   for (const [field, data] of iterator) {
     const { type, format } = data
-    operatorTypes[field] = type
-    if (type === 'string' && format?.includes('date')) {
-      operatorTypes[field] = 'date'
+    if (!operatorTypes[field]) {
+      operatorTypes[field] = type
+      if (type === 'string' && format?.includes('date')) {
+        operatorTypes[field] = 'date'
+      }
     }
 
     // do not use `offset`, `limit`, `fields`, `sort` as table prop
@@ -118,9 +126,9 @@ export const getQuerySchema = (schema) => {
   }
 }
 
-const normalizeJson = (operatorType, value, field) =>
-  field === 'fields'
-    ? String(value).split(',')
+const normalizeJson = (operatorType, value) =>
+  ['array'].includes(operatorType)
+    ? String(value || '').split(',').map(item => item.trim()).filter(Boolean)
     : ['number', 'integer'].includes(operatorType)
         ? isNaN(Number(value))
           ? value
@@ -166,7 +174,7 @@ export const getFilterRule = (param0, reqQuery) => {
     const operatorType = operatorTypes[field]
 
     const { errors: _errors, validated } =
-      querySchema.validate({ [field]: normalizeJson(operatorType, _value, field) })
+      querySchema.validate({ [field]: normalizeJson(operatorType, _value) })
     Object.assign(errors, _errors)
 
     if (NO_OPERATOR_PROPS.includes(field)) {

@@ -215,7 +215,13 @@ function convertFilterRule (filterRule) {
     const type = rules.type
 
     let tmp
-    if (type === 'string') {
+    if (type === 'array') {
+      if (Array.isArray(rules.eq)) {
+        filter[Op.and] = filter[Op.and] || []
+        filter[Op.and].push({ [Op.or]: rules.eq.map(item => ({ [field]: item })) })
+      }
+      continue
+    } else if (type === 'string') {
       for (const [op, value] of Object.entries(rules)) {
         switch (op) {
           case 'like': {

@@ -187,7 +187,13 @@ const convertFilterRule = (filterRule) => {
     const type = rules.type
 
     let tmp
-    if (type === 'string') {
+    if (type === 'array') {
+      if (Array.isArray(rules.eq)) {
+        filter.$and = filter.$and || []
+        filter.$and.push({ $or: rules.eq.map(item => ({ [field]: item })) })
+      }
+      continue
+    } else if (type === 'string') {
       for (const [op, value] of Object.entries(rules)) {
         const esc = escapeRegExp(isCs ? value : value.toLowerCase())
 
