@@ -185,7 +185,7 @@ describe('utils/query', function () {
       const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
       assert.deepEqual(result.filter, {
         id: {
-          eq: ['10', '12', '14'],
+          eq: ['10,12', '14'],
           type: 'array'
         }
       })

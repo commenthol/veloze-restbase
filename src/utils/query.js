@@ -126,14 +126,52 @@ export const getQuerySchema = (schema) => {
   }
 }
 
-const normalizeJson = (operatorType, value) =>
-  ['array'].includes(operatorType)
-    ? String(value || '').split(',').map(item => item.trim()).filter(Boolean)
-    : ['number', 'integer'].includes(operatorType)
-        ? isNaN(Number(value))
-          ? value
-          : Number(value)
-        : value
+/**
+ * split string by `sep` separation char. If char is double-encoded then do not
+ * split the string.
+ *
+ * E.g. 'a,,b,c' gives ['a,b', 'c']
+ *
+ * @param {string} str
+ * @param {*} [sep=',']
+ * @returns {string[]}
+ */
+const split = (str, sep = ',') => {
+  const arr = []
+  let tmp = ''
+  for (let i = 0; i < [...str].length; i++) {
+    const char = str.at(i)
+    if (char !== sep) {
+      tmp += char
+    } else {
+      if (str.at(i + 1) === char) {
+        tmp += char
+        i++
+      } else {
+        tmp = tmp.trim()
+        tmp && arr.push(tmp)
+        tmp = ''
+      }
+    }
+  }
+  tmp && arr.push(tmp)
+  return arr
+}
+
+const normalizeJson = (operatorType, value) => {
+  switch (operatorType) {
+    case 'array':
+      return split(value || '')
+      // return String(value || '').split(',').map(item => item.trim()).filter(Boolean)
+    case 'number':
+    case 'integer':
+      return isNaN(Number(value))
+        ? value
+        : Number(value)
+    default:
+      return value
+  }
+}
 
 const normalize = (operatorType, value) =>
   operatorType === 'date'
