@@ -58,7 +58,7 @@ export class ModelAdapter {
     const { errors, validated } = this._schema.validate(doc)
     log.debug({ create: true, errors, validated })
     if (errors) {
-      throw new HttpError(400, 'validation error', { description: errors })
+      throw new HttpError(400, 'validation error', { info: errors })
     }
 
     validated.createdAt = createdAtDate
@@ -86,7 +86,7 @@ export class ModelAdapter {
     const { errors, validated } = this._schema.validate(doc)
     log.debug({ update: true, errors, validated })
     if (errors) {
-      throw new HttpError(400, 'validation error', { description: errors })
+      throw new HttpError(400, 'validation error', { info: errors })
     }
 
     const updatedItem = await this._adapter.update(validated)
@@ -118,7 +118,7 @@ export class ModelAdapter {
   async findMany (query) {
     const { errors, filter, findOptions } = getFilterRule(this._querySchemaTypes, query)
     if (errors) {
-      throw new HttpError(400, 'validation error', { description: errors })
+      throw new HttpError(400, 'validation error', { info: errors })
     }
 
     const data = await this._adapter.findMany(filter, findOptions)

@@ -23,12 +23,12 @@
 export function modelRouter(options: SetupRestOptions): Router;
 export type Handler = import('./types').Handler;
 export type Hooks = {
-    all?: import("veloze/types/types.js").Handler | import("veloze/types/types.js").Handler[] | undefined;
-    create?: import("veloze/types/types.js").Handler | import("veloze/types/types.js").Handler[] | undefined;
-    update?: import("veloze/types/types.js").Handler | import("veloze/types/types.js").Handler[] | undefined;
-    findById?: import("veloze/types/types.js").Handler | import("veloze/types/types.js").Handler[] | undefined;
-    find?: import("veloze/types/types.js").Handler | import("veloze/types/types.js").Handler[] | undefined;
-    deleteById?: import("veloze/types/types.js").Handler | import("veloze/types/types.js").Handler[] | undefined;
+    all?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    create?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    update?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    findById?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    find?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    deleteById?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
 };
 export type SetupRestOptions = {
     adapter: import('../src/adapters/Adapter.js').Adapter;
