@@ -14,7 +14,6 @@ export class Schema {
     constructor(schema: any, options?: import("ajv").Options | undefined);
     _schema: any;
     _validate: import("ajv").ValidateFunction<unknown>;
-    _doRemoveAdditional: boolean;
     _types: {} | undefined;
     get schema(): any;
     /**
@@ -41,12 +40,6 @@ export class Schema {
      * @returns {object|FormErrors}
      */
     private _ajvToFormErrors;
-    /**
-     * @private
-     * @param {object|null|undefined} values
-     * @returns {object}
-     */
-    private _removeAdditional;
 }
 export type ErrorObject = import('ajv').ErrorObject;
 export type FormErrors = {

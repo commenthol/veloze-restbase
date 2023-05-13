@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'assert/strict'
 import { Schema } from '../src/Schema.js'
 import { schema } from './fixtures/index.js'
 
@@ -126,5 +126,20 @@ describe('schema', function () {
       typeUri: 'string',
       uniqueArray: 'array'
     })
+  })
+
+  it('remove additional properties', function () {
+    const schema = {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        string: { type: 'string' }
+      }
+    }
+    const compiled = new Schema(schema)
+    const { errors, validated } = compiled.validate({ two: 12 })
+
+    assert.equal(errors, undefined)
+    assert.deepEqual(validated, {})
   })
 })

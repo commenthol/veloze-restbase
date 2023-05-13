@@ -1,4 +1,5 @@
-import Ajv from 'ajv'
+import Ajv2020 from 'ajv/dist/2020.js'
+
 import ajvFormats from 'ajv-formats'
 import { logger } from './utils/index.js'
 
@@ -23,7 +24,7 @@ export class Schema {
       ...ajvOpts
     } = options || {}
 
-    const ajv = new Ajv({
+    const ajv = new Ajv2020({
       strict: true,
       allErrors: true,
       coerceTypes: true, // some databases return string instead of number
@@ -36,7 +37,6 @@ export class Schema {
     this._schema = { additionalProperties: false, ...schema }
     this._validate = ajv.compile(this._schema)
 
-    this._doRemoveAdditional = !schema.additionalProperties
     this._types = undefined
   }
 
@@ -70,13 +70,11 @@ export class Schema {
    * }}
    */
   validate (data = {}) {
-    const validated = { ...data }
+    const validated = structuredClone(data)
     // @note this._validate modifies data object if `default` is set!
     const valid = this._validate(validated)
     if (valid) {
-      return {
-        validated: this._removeAdditional(validated)
-      }
+      return { validated }
     }
     const errors = this._ajvToFormErrors(this._validate.errors)
     return { errors, validated }
@@ -111,23 +109,5 @@ export class Schema {
     }
 
     return errs
-  }
-
-  /**
-   * @private
-   * @param {object|null|undefined} values
-   * @returns {object}
-   */
-  _removeAdditional (values) {
-    if (!this._doRemoveAdditional || !values) {
-      return values || {}
-    }
-    const curr = {}
-    for (const [prop, value] of Object.entries(values)) {
-      if (this._schema.properties[prop]) {
-        curr[prop] = value
-      }
-    }
-    return curr
   }
 }
