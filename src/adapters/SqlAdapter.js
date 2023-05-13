@@ -89,6 +89,7 @@ export class SqlAdapter extends Adapter {
 
     const _indexes = [
       { fields: ['version'] },
+      { fields: ['createdAt'] },
       // @ts-ignore
       ...indexes
     ]
@@ -148,6 +149,8 @@ export class SqlAdapter extends Adapter {
       ...convertFindOptions(findOptions),
       where
     }
+    // console.dir(findFilter, { depth: null })
+    log.debug(findFilter)
     const results = await this._model.findAll(findFilter)
     const obj = {
       data: toArray(results)
@@ -187,7 +190,7 @@ export class SqlAdapter extends Adapter {
  * @returns {object} Sequelize model
  */
 function schemaToModel (schema) {
-  const _schema = schema.schema || schema
+  const _schema = schema.jsonSchema || schema
   if (!_schema) {
     throw new Error('need a schema')
   }
@@ -199,12 +202,12 @@ function schemaToModel (schema) {
 SqlAdapter.schemaToModel = schemaToModel
 
 /**
- * see https://sequelize.org/docs/v6/core-concepts/model-querying-basics/
+ * @see https://sequelize.org/docs/v6/core-concepts/model-querying-basics/
  */
 function convertFilterRule (filterRule) {
   const filter = {}
   for (const [field, rules] of Object.entries(filterRule)) {
-    /* c8 ignore next 3 */
+    /* c8 ignore next 4 */
     if (typeof rules !== 'object') {
       filter[field] = rules
       continue
@@ -212,57 +215,65 @@ function convertFilterRule (filterRule) {
 
     // const isCs = !!rules.$cs
     const isNot = !!rules.$not
-    const type = rules.type
 
     let tmp
-    if (type === 'array') {
-      if (Array.isArray(rules.$eq)) {
-        filter[Op.and] = filter[Op.and] || []
-        filter[Op.and].push({ [Op.or]: rules.$eq.map(item => ({ [field]: item })) })
-      }
+    // if (['$not'].includes(field)) {
+    //   filter[field] = convertFilterRule(rules)
+    //   continue
+    // } else
+    if (['$and', '$or'].includes(field)) {
+      filter[Op[field.slice(1)]] = rules.map(rule => convertFilterRule(rule))
       continue
-    } else if (type === 'string') {
-      for (const [op, value] of Object.entries(rules)) {
-        switch (op) {
-          case '$like': {
-            const _op = isNot ? Op.notLike : Op.like
-            tmp = { [_op]: `%${escapeLike(value)}%` }
-            break
-          }
-          case '$starts': {
-            const v = { [Op.startsWith]: value }
-            tmp = isNot ? { [Op.not]: v } : v
-            break
-          }
-          case '$ends': {
-            const v = { [Op.endsWith]: value }
-            tmp = isNot ? { [Op.not]: v } : v
-            break
-          }
-          case '$cs':
-          case '$eq':
-          case '$not': {
-            if (tmp) break
-            tmp = isNot ? { [Op.not]: value } : value
-            break
-          }
-        }
-      }
-    } else {
-      // 'number', 'date'
-      tmp = {}
-      for (const [op, value] of Object.entries(rules)) {
-        if (op === 'type') {
-          continue
-        }
-        if (op === '$eq') {
-          tmp = value
-          break
-        }
-        tmp[Op[op.slice(1)]] = value
-      }
+    }
+    if (Array.isArray(rules.$eq)) {
+      filter[Op.and] = filter[Op.and] || []
+      filter[Op.and].push({ [Op.or]: rules.$eq.map(item => ({ [field]: item })) })
+      continue
     }
 
+    for (const [op, value] of Object.entries(rules)) {
+      switch (op) {
+        case '$like': {
+          const _op = isNot ? Op.notLike : Op.like
+          tmp = { [_op]: `%${escapeLike(value)}%` }
+          break
+        }
+        case '$starts': {
+          const v = { [Op.startsWith]: value }
+          tmp = isNot ? { [Op.not]: v } : v
+          break
+        }
+        case '$ends': {
+          const v = { [Op.endsWith]: value }
+          tmp = isNot ? { [Op.not]: v } : v
+          break
+        }
+        case '$cs':
+        case '$not':
+        case '$eq': {
+          if (tmp !== undefined) break
+          switch (typeof value) {
+            case 'string': {
+              tmp = isNot ? { [Op.not]: value } : value
+              break
+            }
+            default:
+              // type number, boolean
+              tmp = value
+          }
+          break
+        }
+        case '$lt':
+        case '$lte':
+        case '$gt':
+        case '$gte':
+        case '$ne': {
+          tmp = tmp || {}
+          tmp[Op[op.slice(1)]] = value
+          break
+        }
+      }
+    }
     filter[field] = tmp
   }
 
@@ -272,7 +283,11 @@ SqlAdapter.convertFilterRule = convertFilterRule
 
 function convertFindOptions (findOptions) {
   const { offset, limit, fields, sort } = findOptions
-  const options = {}
+  const options = {
+    offset: 0,
+    limit: 100,
+    order: [['createdAt', 'ASC']]
+  }
 
   if (typeof offset === 'number') {
     options.offset = offset
@@ -283,10 +298,12 @@ function convertFindOptions (findOptions) {
   if (Array.isArray(fields)) {
     options.attributes = fields
   }
-  if (sort && typeof sort === 'object') {
+  if (Array.isArray(sort)) {
     options.order = []
-    for (const [field, order] of Object.entries(sort)) {
-      options.order.push([field, order === 1 ? 'ASC' : 'DESC'])
+    for (const item of sort) {
+      for (const [field, order] of Object.entries(item)) {
+        options.order.push([field, order === 1 ? 'ASC' : 'DESC'])
+      }
     }
   }
 

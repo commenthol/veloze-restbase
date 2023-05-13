@@ -49,25 +49,25 @@ describe('schema', function () {
 
     // console.log(errors)
     assert.deepEqual(errors, {
-      arrayMaxItems: 'must NOT have more than 2 items',
-      arrayMinItems: 'must NOT have fewer than 2 items',
-      arrayMinItemsOne: 'must NOT have fewer than 1 items',
-      arrayOfIntegers: 'must be integer',
-      const: 'must be equal to constant',
-      enum: 'must be equal to one of the allowed values',
-      pattern: 'must match pattern "[0-9]{1,2}x[0-9]{1,2}"',
+      '/arrayMaxItems': 'must NOT have more than 2 items',
+      '/arrayMinItems': 'must NOT have fewer than 2 items',
+      '/arrayMinItemsOne': 'must NOT have fewer than 1 items',
+      '/arrayOfIntegers/2': 'must be integer',
+      '/const': 'must be equal to constant',
+      '/enum': 'must be equal to one of the allowed values',
+      '/pattern': 'must match pattern "[0-9]{1,2}x[0-9]{1,2}"',
       required: "must have required property 'required'",
-      typeBoolean: 'must be boolean',
-      typeEmail: 'must match format "email"',
-      typeInteger: 'must be integer',
-      typeIntegerMultipleOf: 'must be multiple of 5',
-      typeNumber: 'must be number',
-      typeNumberExclusiveMaximum: 'must be < 1',
-      typeNumberExclusiveMinimum: 'must be > 1',
-      typeNumberMaximum: 'must be <= 1',
-      typeNumberMinimum: 'must be >= 1',
-      typeUri: 'must match format "uri"',
-      uniqueArray:
+      '/typeBoolean': 'must be boolean',
+      '/typeEmail': 'must match format "email"',
+      '/typeInteger': 'must be integer',
+      '/typeIntegerMultipleOf': 'must be multiple of 5',
+      '/typeNumber': 'must be number',
+      '/typeNumberExclusiveMaximum': 'must be < 1',
+      '/typeNumberExclusiveMinimum': 'must be > 1',
+      '/typeNumberMaximum': 'must be <= 1',
+      '/typeNumberMinimum': 'must be >= 1',
+      '/typeUri': 'must match format "uri"',
+      '/uniqueArray':
         'must NOT have duplicate items (items ## 2 and 1 are identical)'
     })
     // console.log(data)

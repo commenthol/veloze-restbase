@@ -61,7 +61,7 @@ server.use('/items', itemsRouter.handle)
 server.listen(HTTP_PORT)
 console.info('server started %j', server.address())
 
-process.on('SIGTERM', () => {
+process.on('SIGINT', () => {
   // 7. don't forget to close the db-connection
   client.close()
 })

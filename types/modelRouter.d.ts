@@ -7,6 +7,7 @@
  * @property {Handler|Handler[]} [update]
  * @property {Handler|Handler[]} [findById]
  * @property {Handler|Handler[]} [find]
+ * @property {Handler|Handler[]} [search]
  * @property {Handler|Handler[]} [deleteById]
  */
 /**
@@ -28,6 +29,7 @@ export type Hooks = {
     update?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
     findById?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
     find?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    search?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
     deleteById?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
 };
 export type SetupRestOptions = {

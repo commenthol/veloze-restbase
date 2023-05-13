@@ -1,11 +1,13 @@
 import { HttpError } from 'veloze'
-import { logger, nanoid, getQuerySchema, getFilterRule } from './utils/index.js'
+import { logger, nanoid, querySchema, searchSchema } from './utils/index.js'
+import { LIMIT } from './constants.js'
 
 /**
  * @typedef {import('../src/adapters/Adapter').Adapter} Adapter
  *
  * @typedef {object} ModelAdapterOptions
  * @property {Function} [randomUuid]
+ * @property {number} [limit=100]
  */
 
 const log = logger('ModelAdapter')
@@ -17,12 +19,14 @@ export class ModelAdapter {
    */
   constructor (adapter, options) {
     const {
-      randomUuid = nanoid
+      randomUuid = nanoid,
+      limit = LIMIT
     } = options || {}
 
     this._adapter = adapter
     this._schema = adapter.schema
-    this._querySchemaTypes = getQuerySchema(adapter.schema)
+    this._querySchema = querySchema({ modelSchema: adapter.schema, limit })
+    this._searchSchema = searchSchema({ modelSchema: adapter.schema, limit })
     this._randomUuid = randomUuid
   }
 
@@ -116,11 +120,22 @@ export class ModelAdapter {
    * @returns {Promise<object>} found items
    */
   async findMany (query) {
-    const { errors, filter, findOptions } = getFilterRule(this._querySchemaTypes, query)
+    const { errors, filter, findOptions } = this._querySchema.validate(query)
     if (errors) {
       throw new HttpError(400, 'validation error', { info: errors })
     }
+    log.debug('findMany %j %j', filter, findOptions)
+    const data = await this._adapter.findMany(filter, findOptions)
+    const { offset, limit } = findOptions
+    return { offset, limit, count: data?.count, data: data?.data }
+  }
 
+  async searchMany (body) {
+    const { errors, filter, findOptions } = this._searchSchema.validate(body)
+    if (errors) {
+      throw new HttpError(400, 'validation error', { info: errors })
+    }
+    log.debug('searchMany %j %j', filter, findOptions)
     const data = await this._adapter.findMany(filter, findOptions)
     const { offset, limit } = findOptions
     return { offset, limit, count: data?.count, data: data?.data }

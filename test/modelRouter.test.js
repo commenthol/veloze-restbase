@@ -68,7 +68,7 @@ function testSet (options) {
           assert.deepEqual(others, {
             status: 400,
             message: 'validation error',
-            errors: { quantity: 'must be integer' }
+            errors: { '/quantity': 'must be integer' }
           })
         })
     })
@@ -107,7 +107,7 @@ function testSet (options) {
           assert.equal(body.message, 'validation error')
           assert.deepEqual(body.errors, {
             item: "must have required property 'item'",
-            unit: 'must be equal to one of the allowed values'
+            '/unit': 'must be equal to one of the allowed values'
           })
         })
     })
@@ -384,6 +384,99 @@ function testSet (options) {
           )
         })
     })
+
+    it('shall find several documents', async function () {
+      await supertest(options.router.handle)
+        // .search('/items')
+        .post('/items/search')
+        .type('json')
+        .send({
+          $or: [{ item: 'journal' }, { item: { $like: 'oo' } }]
+        })
+        .expect(200)
+        .then(({ body }) => {
+          const result = body.data.map(({ item, width, height }) => ({
+            item,
+            width,
+            height
+          }))
+          assert.deepEqual(result, [
+            { item: 'journal', width: 21, height: 14 },
+            { item: 'notebook', width: 11, height: 9 }
+          ])
+        })
+    })
+
+    it('shall find several documents with $and', async function () {
+      await supertest(options.router.handle)
+        // .search('/items')
+        .post('/items/search')
+        .type('json')
+        .send({
+          offset: 0,
+          limit: 10,
+          sort: [{
+            item: 1 // sort item ascending
+          }, {
+            quantity: -1 // sort count descending
+          }],
+          fields: ['item', 'quantity'],
+          $and: [
+            { item: { $like: 'paper', $not: true, $cs: false } },
+            { quantity: { $gt: 5, $lte: 50 } }
+          ]
+        })
+        .expect(200)
+        .then(({ body }) => {
+          assert.deepEqual(body, {
+            offset: 0,
+            limit: 10,
+            data: [
+              {
+                item: 'journal',
+                quantity: 25
+              },
+              {
+                item: 'notebook',
+                quantity: 50
+              },
+              {
+                item: 'postcard',
+                quantity: 45
+              }
+            ]
+          })
+        })
+    })
+
+    it('shall find several documents with $and', async function () {
+      await supertest(options.router.handle)
+        .search('/items')
+        // .post('/items/search')
+        .type('json')
+        .send({
+          sort: [{ height: 1 }],
+          fields: ['item', 'height'],
+          item: ['paper', 'journal']
+        })
+        .expect(200)
+        .then(({ body }) => {
+          assert.deepEqual(body, {
+            offset: 0,
+            limit: 100,
+            data: [
+              {
+                height: 8.5,
+                item: 'paper'
+              },
+              {
+                height: 14,
+                item: 'journal'
+              }
+            ]
+          })
+        })
+    })
   })
 }
 
@@ -415,8 +508,8 @@ describe('modelRouter', function () {
         // define our rest-router based on the db-adapter
         const itemRouter = modelRouter({ adapter })
         // mount it
-        const router = (options.router = new Router())
-        router.use(itemRouter.mountPath, itemRouter.handle)
+        options.router = new Router()
+        options.router.use(itemRouter.mountPath, itemRouter.handle)
 
         // cleanup collection
         await this.adapter.model.deleteMany({})

@@ -1,48 +1,51 @@
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import { Schema } from '../../src/Schema.js'
-import { getQuerySchema, getFilterRule } from '../../src/utils/query.js'
+import { querySchema } from '../../src/utils/query.js'
 import { dbItemsSchema } from '../fixtures/dbitems.js'
 
 describe('utils/query', function () {
-  let querySchemaOperatorTypes
-  let querySchema
+  let _querySchema
 
   before(function () {
     const modelSchema = new Schema(dbItemsSchema)
-    querySchemaOperatorTypes = getQuerySchema(modelSchema)
-    querySchema = querySchemaOperatorTypes.querySchema
+    _querySchema = querySchema({ modelSchema })
   })
 
   describe('getQuerySchema()', function () {
+    let schema
+    before(function () {
+      schema = _querySchema.schema
+    })
+
     it('offset=0', function () {
-      const { errors, validated } = querySchema.validate({ offset: 0 })
+      const { errors, validated } = schema.validate({ offset: 0 })
       assert.equal(errors, undefined)
       assert.deepEqual(validated, { offset: 0 })
     })
 
     it('offset=-10 fails', function () {
-      const { errors } = querySchema.validate({ offset: -10 })
-      assert.deepEqual(errors, { offset: 'must be >= 0' })
+      const { errors } = schema.validate({ offset: -10 })
+      assert.deepEqual(errors, { '/offset': 'must be >= 0' })
     })
 
     it('limit=0', function () {
-      const { errors, validated } = querySchema.validate({ limit: 0 })
+      const { errors, validated } = schema.validate({ limit: 0 })
       assert.equal(errors, undefined)
       assert.deepEqual(validated, { limit: 0 })
     })
 
     it('limit=-1 fails', function () {
-      const { errors } = querySchema.validate({ limit: -1 })
-      assert.deepEqual(errors, { limit: 'must be > -1' })
+      const { errors } = schema.validate({ limit: -1 })
+      assert.deepEqual(errors, { '/limit': 'must be > -1' })
     })
 
     it('limit=-10 fails', function () {
-      const { errors } = querySchema.validate({ limit: -10 })
-      assert.deepEqual(errors, { limit: 'must be > -1' })
+      const { errors } = schema.validate({ limit: -10 })
+      assert.deepEqual(errors, { '/limit': 'must be > -1' })
     })
 
     it('fields=item,width', function () {
-      const { errors, validated } = querySchema.validate({
+      const { errors, validated } = schema.validate({
         fields: ['item', 'width']
       })
       assert.equal(errors, undefined)
@@ -52,21 +55,21 @@ describe('utils/query', function () {
     })
 
     it('fields=item,width,notThere fails', function () {
-      const { errors } = querySchema.validate({
+      const { errors } = schema.validate({
         fields: ['item', 'width', 'notThere']
       })
       assert.deepEqual(errors, {
-        fields: 'must be equal to one of the allowed values'
+        '/fields/2': 'must be equal to one of the allowed values'
       })
     })
 
     it('width=10', function () {
-      const { errors } = querySchema.validate({ width: '10a' })
-      assert.deepEqual(errors, { width: 'must be number' })
+      const { errors } = schema.validate({ width: '10a' })
+      assert.deepEqual(errors, { '/width': 'must be number' })
     })
 
     it('countDocs=true', function () {
-      const { errors, validated } = querySchema.validate({ countDocs: 'true' })
+      const { errors, validated } = schema.validate({ countDocs: 'true' })
       assert.deepEqual(errors, undefined)
       assert.deepEqual(validated, {
         countDocs: true
@@ -74,12 +77,34 @@ describe('utils/query', function () {
     })
 
     it('countDocs=10', function () {
-      const { errors } = querySchema.validate({ countDocs: 10 })
-      assert.deepEqual(errors, { countDocs: 'must be boolean' })
+      const { errors } = schema.validate({ countDocs: 10 })
+      assert.deepEqual(errors, { '/countDocs': 'must be boolean' })
     })
   })
 
-  describe('getFilterRule', function () {
+  describe('querySchema.validate()', function () {
+    it('shall extract only first string operator', function () {
+      const reqQuery = {
+        status: 'A',
+        status$like$cs: 'D'
+      }
+
+      const result = _querySchema.validate(reqQuery)
+
+      assert.deepEqual(result.errors, {
+        status: 'duplicated string operator $like'
+      })
+      assert.deepEqual(result.filter, {
+        status: {
+          $eq: 'A'
+        }
+      })
+      assert.deepEqual(result.findOptions, {
+        limit: 100,
+        offset: 0
+      })
+    })
+
     it('shall extract query parameters', function () {
       const reqQuery = {
         offset: '20',
@@ -90,35 +115,34 @@ describe('utils/query', function () {
         item$not$like: 'pap',
         width$gte: '10',
         width$lt: '15',
+        height: '2',
         status: 'A',
-        status$like: 'D',
         unit$cs: 'cm',
         createdAt$gte: '2023-01-03'
       }
 
-      const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
+      const result = _querySchema.validate(reqQuery)
 
       assert.deepEqual(result.errors, null)
       assert.deepEqual(result.filter, {
         createdAt: {
-          type: 'date',
           $gte: new Date('2023-01-03T00:00:00.000Z')
         },
         item: {
-          type: 'string',
           $like: 'pap',
           $not: 'pap'
         },
         status: {
-          type: 'string',
-          $like: 'D'
+          $eq: 'A'
         },
         unit: {
-          type: 'string',
           $cs: 'cm'
         },
+        height: {
+          $eq: 2
+        },
         width: {
-          type: 'number',
+          $gte: 10,
           $lt: 15
         }
       })
@@ -127,7 +151,7 @@ describe('utils/query', function () {
         fields: ['item', 'width'],
         offset: 20,
         limit: 200,
-        sort: { item: 1, status: -1 }
+        sort: [{ item: 1 }, { status: -1 }]
       })
     })
 
@@ -143,33 +167,29 @@ describe('utils/query', function () {
         notThere: 'foo'
       }
 
-      const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
+      const result = _querySchema.validate(reqQuery)
 
       assert.deepEqual(result.errors, {
-        fields: 'must be equal to one of the allowed values',
+        '/fields/2': 'must be equal to one of the allowed values',
         notThere: 'unsupported property',
         status: 'unsupported operator $notlike',
-        width: 'must be number',
+        '/width': 'must be number',
         createdAt: 'unsupported operator $like'
       })
       assert.deepEqual(result.filter, {
         createdAt: {
-          type: 'date'
         },
         item: {
-          type: 'string',
           $like: 'pap',
           $not: 'pap'
         },
         status: {
-          type: 'string'
+          $eq: 'A'
         },
         unit: {
-          type: 'string',
           $cs: 'cm'
         },
         width: {
-          type: 'number',
           $gte: '10a'
         }
       })
@@ -182,11 +202,10 @@ describe('utils/query', function () {
 
     it('id=10,,12, ,14', function () {
       const reqQuery = { id: '10,,12, ,14' }
-      const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
+      const result = _querySchema.validate(reqQuery)
       assert.deepEqual(result.filter, {
         id: {
-          $eq: ['10,12', '14'],
-          type: 'array'
+          $eq: ['10,12', '14']
         }
       })
     })
@@ -205,7 +224,8 @@ describe('utils/query', function () {
           notEnds: { type: 'string' }
         }
       }
-      const querySchemaOperatorTypes = getQuerySchema(new Schema(jsonSchema))
+      const modelSchema = new Schema(jsonSchema)
+      const _querySchema = querySchema({ modelSchema })
 
       it('case insensitive', function () {
         const reqQuery = {
@@ -219,41 +239,33 @@ describe('utils/query', function () {
           notEnds$not$ends: '!^End$'
         }
 
-        const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
+        const result = _querySchema.validate(reqQuery)
         assert.deepEqual(result.filter, {
           ends: {
-            type: 'string',
             $ends: '^End$'
           },
           equal: {
-            type: 'string',
             $eq: 'EquaL'
           },
           like: {
-            type: 'string',
             $like: 'lIke'
           },
           notEnds: {
-            type: 'string',
             $ends: '!^End$',
             $not: '!^End$'
           },
           notEqual: {
-            type: 'string',
             $not: '!EquaL'
           },
           notLike: {
-            type: 'string',
             $like: '!lIke',
             $not: '!lIke'
           },
           notStarts: {
-            type: 'string',
             $not: '!START$',
             $starts: '!START$'
           },
           starts: {
-            type: 'string',
             $starts: 'START$'
           }
         })
@@ -271,47 +283,40 @@ describe('utils/query', function () {
           notEnds$not$ends$cs: '!^End$'
         }
 
-        const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
+        const result = _querySchema.validate(reqQuery)
+        assert.deepEqual(result.errors, null)
         assert.deepEqual(result.filter, {
           ends: {
-            type: 'string',
             $cs: '^End$',
             $ends: '^End$'
           },
           equal: {
-            type: 'string',
             $cs: 'EquaL'
           },
           like: {
-            type: 'string',
             $cs: 'lIke',
             $like: 'lIke'
           },
           notEnds: {
-            type: 'string',
             $cs: '!^End$',
             $ends: '!^End$',
             $not: '!^End$'
           },
           notEqual: {
-            type: 'string',
             $cs: '!EquaL',
             $not: '!EquaL'
           },
           notLike: {
-            type: 'string',
             $cs: '!lIke',
             $like: '!lIke',
             $not: '!lIke'
           },
           notStarts: {
-            type: 'string',
             $cs: '!START$',
             $not: '!START$',
             $starts: '!START$'
           },
           starts: {
-            type: 'string',
             $cs: 'START$',
             $starts: 'START$'
           }

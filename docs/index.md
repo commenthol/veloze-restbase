@@ -18,10 +18,16 @@ new document in the database.
 
 <!-- !toc (minlevel=2) -->
 
-- [POST /{modelName}&nbsp;](#post-modelname)
-- [PUT /{modelName}/:id](#put-modelnameid)
-- [DELETE /{modelName}/:id](#delete-modelnameid)
-- [GET /{modelName}/:id](#get-modelnameid)
+* [POST /{modelName}&nbsp;](#post-modelname)
+* [PUT /{modelName}/:id](#put-modelnameid)
+* [DELETE /{modelName}/:id](#delete-modelnameid)
+* [GET /{modelName}/:id](#get-modelnameid)
+* [GET /{modelName}&nbsp;](#get-modelname)
+  * [Query Operators numeric](#query-operators-numeric)
+  * [Query Operators string](#query-operators-string)
+  * [Query Parameters](#query-parameters)
+* [POST /{modelName}/search](#post-modelnamesearch)
+* [SEARCH /{modelName}&nbsp;](#search-modelname)
 
 <!-- toc! -->
 
@@ -172,13 +178,13 @@ GET ?height%24ne=17
 > **⚠️ NOTE:** Case (in-)sensitive search may not work for all database
 > adapters. Please consider setting the correct collation.
 > E.g. for [postgres](https://www.postgresql.org/docs/current/collation.html#COLLATION-NONDETERMINISTIC) choose
->
+> 
 > ```sql
 > CREATE COLLATION case_insensitive (provider = icu, locale = 'und-u-ks-level2', deterministic = false);
 > ```
->
+> 
 > E.g. for mariadb, mysql
->
+> 
 > ```sql
 > ALTER TABLE mytable
 > CONVERT TO CHARACTER SET utf8mb4
@@ -197,13 +203,13 @@ GET ?article%24starts%24cs=Jacket
 
 ### Query Parameters
 
-| param    | type     | description                                                                                                                            |
-| -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| offset   | integer  | pagination offset                                                                                                                      |
-| limit    | integer  | pagination limit or size (defaults to 100 documents)                                                                                   |
-| countDocs | boolean  | Include document count in response.                                                  |
-| fields   | string[] | comma separated list of schema properties which shall be returned                                                                      |
-| sort     | string[] | comma separated list of schema properties for sorting. <br>Needs `$desc` operator for descending sort. <br>Defaults to ascending sort. |
+| param     | type     | description                                                                                                                            |
+| --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| offset    | integer  | pagination offset                                                                                                                      |
+| limit     | integer  | pagination limit or size (defaults to 100 documents)                                                                                   |
+| countDocs | boolean  | Include document count in response.                                                                                                    |
+| fields    | string[] | comma separated list of schema properties which shall be returned.                                                                     |
+| sort      | string[] | comma separated list of schema properties for sorting. <br>Needs `$desc` operator for descending sort. <br>Defaults to ascending sort. |
 
 > **⚠️ NOTE:** Avoid using the params as document properties. You won't be able to
 > query for any of these doc properties then.
@@ -259,3 +265,69 @@ GET ?sort=price,date%24desc
     }
   }
   ```
+
+## POST /{modelName}/search
+
+Same as [SEARCH /{modelName}&nbsp;](#search-modelname)
+
+## SEARCH /{modelName}&nbsp;
+
+Query multiple documents.
+
+Only properties which are named in the JSON-schema of the model can be used as
+search parameters. 
+
+All Query params from [GET /{modelName}&nbsp;](#get-modelname) can be used to
+form complex search terms.
+
+* [Query Operators numeric](#query-operators-numeric)
+* [Query Operators string](#query-operators-string)
+* [Query Parameters](#query-parameters)
+
+Additionally the boolean operators `$and` and `$or` can be used. 
+
+E.g. with the following JSON-Schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "item": { "type": "string" },
+    "width": { "type": "integer" } 
+  }
+}
+```
+
+To search for the first 10 documents which do not contain "paper" (case-insensitive) and
+have a width greater 5 and less than 30, sorted by "item" and "width"
+(descending), where only the fields "id", "item" and "width" are returned.
+
+```json
+SEARCH /items
+content-type: application/json
+{
+  "offset": 0,
+  "limit": 10,
+  "sort": [
+    { "item": 1 },    // sort item ascending
+    { "width": -1 }   // sort width descending
+  ],
+  "fields": ["id", "item", "width"],
+  "$and": [
+    { "item": { "$like": "paper", "$not": true, "$cs": false } },
+    { "width": { "$gt": 5, "$lte": 30 } }
+  ]
+}
+```
+
+To obtain all documents where item is "paper", "journal" sorted by "width".
+
+```json
+SEARCH /items
+content-type: application/json
+{
+  "item": ["paper", "journal"],
+  "fields": ["id", "width"],
+  "sort": [{ "width": 1 }]
+}
+```

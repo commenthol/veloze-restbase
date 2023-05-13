@@ -8,7 +8,7 @@ based on the documents JSON-schema:
 - **C**reate: `POST /{modelName}`
 - **R**ead: `GET /{modelName}/:id`
 - simple find: `GET /{modelName}?:queryParams`
-- complex find: `SEARCH /{modelName}`
+- complex find: `SEARCH /{modelName}` or `POST /{modelName}/search`
 - **U**pdate: `PUT /{modelName}/:id`
 - **D**elete: `DELETE /{modelName}/:id`
 

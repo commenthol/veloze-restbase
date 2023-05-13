@@ -11,6 +11,7 @@ import { camelToDash } from './utils/index.js'
  * @property {Handler|Handler[]} [update]
  * @property {Handler|Handler[]} [findById]
  * @property {Handler|Handler[]} [find]
+ * @property {Handler|Handler[]} [search]
  * @property {Handler|Handler[]} [deleteById]
  */
 
@@ -37,8 +38,12 @@ export function modelRouter (options) {
   const modelAdapter = new ModelAdapter(adapter)
   const modelNameDashed = camelToDash(modelAdapter.modelName)
 
-  if (!modelNameDashed) { throw new Error('need modelName') }
-  if (/[/:]/.test(modelNameDashed)) { throw new Error('modelName must not contain / or :') }
+  if (!modelNameDashed) {
+    throw new Error('need modelName')
+  }
+  if (/[/:]/.test(modelNameDashed)) {
+    throw new Error('modelName must not contain / or :')
+  }
 
   const router = new Router()
   router.mountPath = `/${modelNameDashed}`
@@ -109,14 +114,17 @@ export function modelRouter (options) {
     postHooks.find
   )
 
-  // router.search('/',
-  //   queryParser,
-  //   preHooks.search,
-  //   wrapAsync(async (req, res) => {
-  //     // TODO:
-  //   }),
-  //   postHooks.search
-  // )
+  const _search = [
+    preHooks.search,
+    wrapAsync(async (req, res) => {
+      res.body = await modelAdapter.searchMany(req.body)
+    }),
+    cacheControl(),
+    postHooks.search
+  ]
+
+  router.post('/search', ..._search)
+  router.search('/', ..._search)
 
   router.delete('/:id',
     preHooks.deleteById,
@@ -128,6 +136,7 @@ export function modelRouter (options) {
     postHooks.deleteById
   )
 
+  // console.dir(router.print(), { depth: null })
   return router
 }
 

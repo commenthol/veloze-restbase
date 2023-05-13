@@ -213,13 +213,13 @@ describe('adapters/SqlAdapter', function () {
   })
 
   describe('convertFilterRule()', function () {
-    describe('sting operators', function () {
+    describe('string operators', function () {
       const VALUE = 'vAl%uE$'
 
       it('equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $eq: VALUE, type: 'string' }
+            str: { $eq: VALUE }
           }),
           {
             str: VALUE
@@ -230,7 +230,7 @@ describe('adapters/SqlAdapter', function () {
       it('equal case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $cs: VALUE, type: 'string' }
+            str: { $cs: VALUE }
           }),
           {
             str: VALUE
@@ -241,7 +241,7 @@ describe('adapters/SqlAdapter', function () {
       it('not equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $not: VALUE, type: 'string' }
+            str: { $not: VALUE }
           }),
           {
             str: { [Op.not]: VALUE }
@@ -252,7 +252,7 @@ describe('adapters/SqlAdapter', function () {
       it('not equal case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $not: VALUE, $cs: VALUE, type: 'string' }
+            str: { $not: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.not]: VALUE }
@@ -263,7 +263,7 @@ describe('adapters/SqlAdapter', function () {
       it('like', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $like: VALUE, type: 'string' }
+            str: { $like: VALUE }
           }),
           {
             str: { [Op.like]: '%vAl\\%uE$%' }
@@ -274,7 +274,7 @@ describe('adapters/SqlAdapter', function () {
       it('like case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $like: VALUE, $cs: VALUE, type: 'string' }
+            str: { $like: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.like]: '%vAl\\%uE$%' }
@@ -285,7 +285,7 @@ describe('adapters/SqlAdapter', function () {
       it('not like', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $not: VALUE, $like: VALUE, type: 'string' }
+            str: { $not: VALUE, $like: VALUE }
           }),
           {
             str: { [Op.notLike]: '%vAl\\%uE$%' }
@@ -296,7 +296,7 @@ describe('adapters/SqlAdapter', function () {
       it('not like case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $like: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
+            str: { $like: VALUE, $not: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.notLike]: '%vAl\\%uE$%' }
@@ -307,7 +307,7 @@ describe('adapters/SqlAdapter', function () {
       it('starts', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $starts: VALUE, type: 'string' }
+            str: { $starts: VALUE }
           }),
           {
             str: { [Op.startsWith]: VALUE }
@@ -318,7 +318,7 @@ describe('adapters/SqlAdapter', function () {
       it('starts case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $starts: VALUE, $cs: VALUE, type: 'string' }
+            str: { $starts: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.startsWith]: VALUE }
@@ -329,7 +329,7 @@ describe('adapters/SqlAdapter', function () {
       it('not starts', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $not: VALUE, $starts: VALUE, type: 'string' }
+            str: { $not: VALUE, $starts: VALUE }
           }),
           {
             str: { [Op.not]: { [Op.startsWith]: VALUE } }
@@ -340,7 +340,7 @@ describe('adapters/SqlAdapter', function () {
       it('not starts case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $starts: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
+            str: { $starts: VALUE, $not: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.not]: { [Op.startsWith]: VALUE } }
@@ -351,7 +351,7 @@ describe('adapters/SqlAdapter', function () {
       it('ends', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $ends: VALUE, type: 'string' }
+            str: { $ends: VALUE }
           }),
           {
             str: { [Op.endsWith]: VALUE }
@@ -362,7 +362,7 @@ describe('adapters/SqlAdapter', function () {
       it('ends case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $ends: VALUE, $cs: VALUE, type: 'string' }
+            str: { $ends: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.endsWith]: VALUE }
@@ -373,7 +373,7 @@ describe('adapters/SqlAdapter', function () {
       it('not ends', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $not: VALUE, $ends: VALUE, type: 'string' }
+            str: { $not: VALUE, $ends: VALUE }
           }),
           {
             str: { [Op.not]: { [Op.endsWith]: VALUE } }
@@ -384,7 +384,7 @@ describe('adapters/SqlAdapter', function () {
       it('not ends case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { $ends: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
+            str: { $ends: VALUE, $not: VALUE, $cs: VALUE }
           }),
           {
             str: { [Op.not]: { [Op.endsWith]: VALUE } }
@@ -397,7 +397,7 @@ describe('adapters/SqlAdapter', function () {
       it('equals', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $eq: 10, type: 'number' }
+            num: { $eq: 10 }
           }),
           {
             num: 10
@@ -408,7 +408,7 @@ describe('adapters/SqlAdapter', function () {
       it('not equals', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $ne: 10, type: 'number' }
+            num: { $ne: 10 }
           }),
           {
             num: { [Op.ne]: 10 }
@@ -419,7 +419,7 @@ describe('adapters/SqlAdapter', function () {
       it('less than', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $lt: 10, type: 'number' }
+            num: { $lt: 10 }
           }),
           {
             num: { [Op.lt]: 10 }
@@ -430,7 +430,7 @@ describe('adapters/SqlAdapter', function () {
       it('less than equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $lte: 10, type: 'number' }
+            num: { $lte: 10 }
           }),
           {
             num: { [Op.lte]: 10 }
@@ -441,7 +441,7 @@ describe('adapters/SqlAdapter', function () {
       it('greater than', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $gt: 10, type: 'number' }
+            num: { $gt: 10 }
           }),
           {
             num: { [Op.gt]: 10 }
@@ -452,7 +452,7 @@ describe('adapters/SqlAdapter', function () {
       it('greater than equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $gte: 10, type: 'number' }
+            num: { $gte: 10 }
           }),
           {
             num: { [Op.gte]: 10 }
@@ -463,7 +463,7 @@ describe('adapters/SqlAdapter', function () {
       it('range', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { $gt: 5, $lte: 10, type: 'number' }
+            num: { $gt: 5, $lte: 10 }
           }),
           {
             num: { [Op.lte]: 10, [Op.gt]: 5 }
@@ -472,14 +472,72 @@ describe('adapters/SqlAdapter', function () {
       })
     })
 
+    describe('boolean operators', function () {
+      it('equals', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            bool: { $eq: true }
+          }),
+          {
+            bool: true
+          }
+        )
+      })
+
+      it('not equals', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            bool: { $ne: true }
+          }),
+          {
+            bool: { [Op.ne]: true }
+          }
+        )
+      })
+    })
+
     describe('array', function () {
       it('query for multiple fields', function () {
-        assert.deepStrictEqual(
+        assert.deepEqual(
           convertFilterRule({
-            id: { $eq: ['10', '12', '14'], type: 'array' }
+            id: { $eq: ['10', '12', '14'] }
           }),
           {
             [Op.and]: [{ [Op.or]: [{ id: '10' }, { id: '12' }, { id: '14' }] }]
+          }
+        )
+      })
+    })
+
+    describe('complex search', function () {
+      it('query for multiple fields', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            item: { $not: true, $cs: true, $like: 'Journal' }
+          }),
+          {
+            item: { [Op.notLike]: '%Journal%' }
+          }
+        )
+      })
+
+      it('query for multiple fields', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            $or: [
+              { item: { $eq: 'Journal' } },
+              { item: { $like: 'oo' } }
+            ]
+          }),
+          {
+            [Op.or]: [
+              {
+                item: 'Journal'
+              },
+              {
+                item: { [Op.like]: '%oo%' }
+              }
+            ]
           }
         )
       })
@@ -493,7 +551,7 @@ describe('adapters/SqlAdapter', function () {
           offset: 10,
           limit: 500,
           fields: ['aa', 'foo', 'bar'],
-          sort: { aa: 1, bar: 0 }
+          sort: [{ aa: 1 }, { bar: 0 }]
         }),
         {
           attributes: ['aa', 'foo', 'bar'],
@@ -516,7 +574,9 @@ describe('adapters/SqlAdapter', function () {
           sort: 'buuh'
         }),
         {
-          limit: 500
+          offset: 0,
+          limit: 500,
+          order: [['createdAt', 'ASC']]
         }
       )
     })

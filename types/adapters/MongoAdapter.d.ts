@@ -73,6 +73,7 @@ export type MongoClientUri = {
 };
 import { Adapter } from './Adapter.js';
 /**
+ * @see https://www.mongodb.com/docs/manual/reference/operator/query
  * @param {object} filterRule
  * @returns {object} mongo filter
  */

@@ -25,7 +25,7 @@ const {
   HTTP_PORT = 3000,
   SQLDB_USER = 'root',
   SQLDB_PASSWORD = 'example',
-  SQLDB_HOST = '127.0.0.01',
+  SQLDB_HOST = '127.0.0.1',
   SQLDB_PORT = '5432',
   SQLDB_DIALECT = 'postgres'
 } = process.env
@@ -90,8 +90,3 @@ app.use('/items', itemsRouter.handle)
 // 6. start up the server
 const server = app.listen(HTTP_PORT)
 console.info('server started %j', server.address())
-
-process.on('SIGTERM', () => {
-  // 7. don't forget to close the db-connection
-  client.close()
-})

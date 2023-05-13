@@ -6,24 +6,33 @@ const { convertFilterRule, convertFindOptions } = MongoAdapter
 describe('adapters/MongoAdapter', function () {
   describe('general', function () {
     it('shall throw if there is no database name', function () {
-      assert.throws(() => {
-        // eslint-disable-next-line no-new
-        new MongoAdapter({})
-      }, (err) => err.message === 'need database')
+      assert.throws(
+        () => {
+          // eslint-disable-next-line no-new
+          new MongoAdapter({})
+        },
+        (err) => err.message === 'need database'
+      )
     })
 
     it('shall throw if there is no modelName name', function () {
-      assert.throws(() => {
-        // eslint-disable-next-line no-new
-        new MongoAdapter({ database: 'test' })
-      }, (err) => err.message === 'need modelName')
+      assert.throws(
+        () => {
+          // eslint-disable-next-line no-new
+          new MongoAdapter({ database: 'test' })
+        },
+        (err) => err.message === 'need modelName'
+      )
     })
 
     it('shall throw if there is no jsonSchema name', function () {
-      assert.throws(() => {
-        // eslint-disable-next-line no-new
-        new MongoAdapter({ database: 'test', modelName: 'tests' })
-      }, (err) => err.message === 'need jsonSchema')
+      assert.throws(
+        () => {
+          // eslint-disable-next-line no-new
+          new MongoAdapter({ database: 'test', modelName: 'tests' })
+        },
+        (err) => err.message === 'need jsonSchema'
+      )
     })
   })
 
@@ -35,7 +44,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $eq: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /^value\$$/i
           }
         )
@@ -45,7 +55,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: VALUE
           }
         )
@@ -55,7 +66,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $not: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /^value\$$/i }
           }
         )
@@ -65,7 +77,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $not: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: VALUE }
           }
         )
@@ -75,7 +88,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $like: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /value\$/i
           }
         )
@@ -85,7 +99,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $like: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /vAluE\$/
           }
         )
@@ -95,7 +110,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $not: VALUE, $like: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /value\$/i }
           }
         )
@@ -105,7 +121,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $like: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /vAluE\$/ }
           }
         )
@@ -115,7 +132,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $starts: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /^value\$/i
           }
         )
@@ -125,7 +143,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $starts: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /^vAluE\$/
           }
         )
@@ -135,7 +154,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $not: VALUE, $starts: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /^value\$/i }
           }
         )
@@ -145,7 +165,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $starts: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /^vAluE\$/ }
           }
         )
@@ -155,7 +176,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $ends: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /value\$$/i
           }
         )
@@ -165,7 +187,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $ends: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: /vAluE\$$/
           }
         )
@@ -175,7 +198,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $not: VALUE, $ends: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /value\$$/i }
           }
         )
@@ -185,16 +209,19 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $ends: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /vAluE\$$/ }
           }
         )
       })
+
       it('not ends case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
             str: { $ends: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
-          }), {
+          }),
+          {
             str: { $not: /vAluE\$$/ }
           }
         )
@@ -206,7 +233,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $eq: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: 10
           }
         )
@@ -216,7 +244,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $ne: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: { $ne: 10 }
           }
         )
@@ -226,7 +255,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $lt: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: { $lt: 10 }
           }
         )
@@ -236,7 +266,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $lte: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: { $lte: 10 }
           }
         )
@@ -246,7 +277,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $gt: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: { $gt: 10 }
           }
         )
@@ -256,7 +288,8 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $gte: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: { $gte: 10 }
           }
         )
@@ -266,8 +299,33 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             num: { $gt: 5, $lte: 10, type: 'number' }
-          }), {
+          }),
+          {
             num: { $lte: 10, $gt: 5 }
+          }
+        )
+      })
+    })
+
+    describe('boolean operators', function () {
+      it('equals', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            bool: { $eq: true, type: 'boolean' }
+          }),
+          {
+            bool: true
+          }
+        )
+      })
+
+      it('not equals', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            bool: { $ne: true, type: 'boolean' }
+          }),
+          {
+            bool: { $ne: true }
           }
         )
       })
@@ -278,8 +336,43 @@ describe('adapters/MongoAdapter', function () {
         assert.deepEqual(
           convertFilterRule({
             id: { $eq: ['10', '12', '14'], type: 'array' }
-          }), {
+          }),
+          {
             $and: [{ $or: [{ id: '10' }, { id: '12' }, { id: '14' }] }]
+          }
+        )
+      })
+    })
+
+    describe('complex search', function () {
+      it('query for multiple fields', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            item: { $not: true, $cs: true, $like: 'Journal', type: 'string' }
+          }),
+          {
+            item: { $not: /Journal/ }
+          }
+        )
+      })
+
+      it('query for multiple fields', function () {
+        assert.deepEqual(
+          convertFilterRule({
+            $or: [
+              { item: { $eq: 'Journal', type: 'string' } },
+              { item: { $like: 'oo', type: 'string' } }
+            ]
+          }),
+          {
+            $or: [
+              {
+                item: /^journal$/i
+              },
+              {
+                item: /oo/i
+              }
+            ]
           }
         )
       })
@@ -293,7 +386,7 @@ describe('adapters/MongoAdapter', function () {
           offset: 10,
           limit: 500,
           fields: ['aa', 'foo', 'bar'],
-          sort: { aa: 1, bar: 0 }
+          sort: [{ aa: 1 }, { bar: 0 }]
         }),
         {
           skip: 10,

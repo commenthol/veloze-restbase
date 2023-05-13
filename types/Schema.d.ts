@@ -12,10 +12,10 @@ export class Schema {
      * @param {SchemaOptions} [options]
      */
     constructor(schema: any, options?: import("ajv").Options | undefined);
-    _schema: any;
+    _jsonSchema: any;
     _validate: import("ajv").ValidateFunction<unknown>;
     _types: {} | undefined;
-    get schema(): any;
+    get jsonSchema(): any;
     /**
      * get types by property names
      * @returns {{[property: string]: string}|{}}
@@ -26,11 +26,13 @@ export class Schema {
     /**
      * @param {object} data
      * @returns {{
+     *  valid: boolean
      *  validated: any
      *  errors?: FormErrors
      * }}
      */
     validate(data?: object): {
+        valid: boolean;
         validated: any;
         errors?: FormErrors | undefined;
     };

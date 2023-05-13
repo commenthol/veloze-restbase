@@ -1,4 +1,4 @@
-import { LIMIT } from '../constants.js'
+import { LIMIT, STRING } from '../constants.js'
 import { Schema } from '../Schema.js'
 
 /**
@@ -42,87 +42,172 @@ import { Schema } from '../Schema.js'
  * @typedef {string} StringWithOperator
  */
 
-export const NUMBER_OPS = ['$gt', '$gte', '$lt', '$lte', '$ne']
-export const STRING_OPS = ['$starts', '$like', '$ends', '$not', '$cs']
+/**
+ * @typedef {Record<string, string>} ErrorsByField errors by field
+ *
+ * @typedef {string|number|boolean} Value
+ *
+ * @typedef {Value|{[operator: string]: Value}} ValueOrRule
+ *
+ * @typedef {{[field: string]: ValueOrRule}} FilterRule
+ */
 
-const OPERATORS = {
+const NUMBER_OPS = ['$gt', '$gte', '$lt', '$lte', '$ne']
+const STRING_OPS = ['$starts', '$like', '$ends', '$not', '$cs']
+
+export const OPERATORS = {
   number: NUMBER_OPS,
   integer: NUMBER_OPS,
   date: NUMBER_OPS,
   string: STRING_OPS
 }
 
-const NO_OPERATOR_PROPS = ['offset', 'limit', 'fields', 'sort', 'countDocs']
+export const NO_OPERATOR_PROPS = [
+  'offset',
+  'limit',
+  'fields',
+  'sort',
+  'countDocs'
+]
 
 /**
- * creates a query json schema to validate correctness of values
- * @param {Schema} schema
- * @returns {{
- *  querySchema: Schema
- *  queryJsonSchema: object
- *  operatorTypes: Record<string, string>|{}
- * }}
+ * @param {object} options
+ * @param {Schema} options.modelSchema
+ * @param {number} [options.limit=100]
  */
-export const getQuerySchema = (schema) => {
-  const fields = Object.keys(schema.getTypes())
-  const queryJsonSchema = {
-    type: 'object',
-    properties: {
-      offset: {
-        type: 'integer',
-        minimum: 0
-      },
-      limit: {
-        type: 'integer',
-        exclusiveMinimum: -1
-      },
-      countDocs: {
-        type: 'boolean'
-      },
-      fields: {
-        type: 'array',
-        items: {
-          enum: fields
-        },
-        maxItems: fields.length
-      },
-      sort: {
-        type: 'string'
-      },
-      id: {
-        type: 'array',
-        items: {
-          type: 'string'
-        }
-      }
+export function querySchema (options) {
+  const { modelSchema, limit: defaultLimit = LIMIT } = options
+  const fields = Object.keys(modelSchema.getTypes())
+
+  const queryJsonSchema = getFindOptionsSchema(fields)
+  queryJsonSchema.properties.id = {
+    type: 'array',
+    items: {
+      type: 'string'
     }
   }
 
-  const operatorTypes = {}
+  const iterator = [
+    ...Object.entries(queryJsonSchema.properties),
+    ...Object.entries(modelSchema.jsonSchema.properties)
+  ]
 
-  const iterator = [...Object.entries(queryJsonSchema.properties), ...Object.entries(schema.schema.properties)]
+  const operatorTypes = getOperatorTypes(iterator)
 
   for (const [field, data] of iterator) {
-    const { type, format } = data
-    if (!operatorTypes[field]) {
-      operatorTypes[field] = type
-      if (type === 'string' && format?.includes('date')) {
-        operatorTypes[field] = 'date'
-      }
-    }
-
-    // do not use `offset`, `limit`, `fields`, `sort` as table prop
+    const { type } = data
+    // do not use `offset`, `limit`, `fields`, `sort`, 'countDocs' as table prop
     if (!queryJsonSchema.properties[field]) {
       queryJsonSchema.properties[field] = { type }
     }
   }
 
+  const schema = new Schema(queryJsonSchema)
+
+  /**
+   * @param {Record<StringWithOperator, string>} query
+   * @returns {{
+   *  errors: ErrorsByField|null|{}
+   *  filter: FilterRule|{}
+   *  findOptions: object
+   * }}
+   */
+  function validate (query) {
+    const errors = {}
+    const filter = {}
+    const findOptions = { offset: 0, limit: defaultLimit }
+
+    for (const [fieldWithOps, _value] of Object.entries(query)) {
+      const [field, ...ops] = splitByOp(fieldWithOps)
+      const operatorType = operatorTypes[field]
+
+      const { errors: _errors, validated } = schema.validate({
+        [field]: normalizeJson(operatorType, _value)
+      })
+      Object.assign(errors, _errors)
+
+      if (NO_OPERATOR_PROPS.includes(field)) {
+        findOptions[field] = validated[field]
+        if (field === 'sort') {
+          findOptions.sort = getSort(_value)
+        }
+        continue
+      }
+
+      if (!operatorType) {
+        errors[field] = 'unsupported property'
+        continue
+      }
+
+      const value = normalize(operatorType, _value)
+
+      const allowedOps = OPERATORS[operatorType] || []
+      filter[field] = filter[field] || {}
+      if (!ops.length) {
+        filter[field].$eq = value
+      }
+      for (const op of ops) {
+        if (!allowedOps.includes(op)) {
+          errors[field] = `unsupported operator ${op}`
+          break
+        }
+        if (operatorType === STRING &&
+          !['$cs', '$not'].includes(op) &&
+          intersection(Object.keys(filter[field] || {}),
+            ['$starts', '$like', '$ends', '$eq']).length
+        ) {
+          errors[field] = `duplicated string operator ${op}`
+          break
+        }
+        filter[field][op] = value
+      }
+    }
+
+    return {
+      errors: Object.keys(errors).length ? errors : null,
+      filter,
+      findOptions
+    }
+  }
+
   return {
-    querySchema: new Schema(queryJsonSchema),
-    queryJsonSchema,
-    operatorTypes
+    schema,
+    validate
   }
 }
+
+// ---- helpers ----
+
+export const getFindOptionsSchema = (fields) => ({
+  type: 'object',
+  properties: {
+    offset: {
+      type: 'integer',
+      minimum: 0
+    },
+    limit: {
+      type: 'integer',
+      exclusiveMinimum: -1
+    },
+    countDocs: {
+      type: 'boolean'
+    },
+    fields: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: fields
+      },
+      maxItems: fields.length
+    },
+    sort: {
+      oneOf: [
+        { type: 'string' },
+        { type: 'array', items: { type: 'integer', enum: [-1, 1] } }
+      ]
+    }
+  }
+})
 
 /**
  * split string by `sep` separation char. If char is double-encoded then do not
@@ -134,7 +219,7 @@ export const getQuerySchema = (schema) => {
  * @param {*} [sep=',']
  * @returns {string[]}
  */
-const splitDoubleEnc = (str, sep = ',') => {
+export const splitDoubleEnc = (str, sep = ',') => {
   const arr = []
   let tmp = ''
   for (let i = 0; i < [...str].length; i++) {
@@ -156,102 +241,56 @@ const splitDoubleEnc = (str, sep = ',') => {
   return arr
 }
 
-const splitByOp = (str, sep = '$') => str.split(sep).map((item, i) => i === 0 ? item : `$${item}`)
+export const splitByOp = (str, sep = '$') =>
+  str.split(sep).map((item, i) => (i === 0 ? item : `$${item}`))
 
-const normalizeJson = (operatorType, value) => {
+/**
+ * @param {Array} iterator
+ * @returns {Record<string, string>|{}}
+ */
+export function getOperatorTypes (iterator) {
+  const operatorTypes = {}
+  for (const [field, data] of iterator) {
+    const { type, format } = data
+    if (!operatorTypes[field]) {
+      operatorTypes[field] = type
+      if (type === 'string' && format?.startsWith('date')) {
+        operatorTypes[field] = 'date'
+      }
+    }
+  }
+  return operatorTypes
+}
+
+export const normalizeJson = (operatorType, value) => {
   switch (operatorType) {
     case 'array':
       return splitDoubleEnc(value || '')
     case 'number':
     case 'integer':
-      return isNaN(Number(value))
-        ? value
-        : Number(value)
-    default:
+      return isNaN(Number(value)) ? value : Number(value)
+    default: // date, string
       return value
   }
 }
 
-const normalize = (operatorType, value) =>
+export const normalize = (operatorType, value) =>
   operatorType === 'date'
     ? new Date(value)
     : normalizeJson(operatorType, value)
 
-/**
- * @typedef {Record<string, string>} ErrorsByField errors by field
- *
- * @typedef {string|number|boolean} Value
- *
- * @typedef {Value|{[operator: string]: Value}} ValueOrRule
- *
- * @typedef {{[field: string]: ValueOrRule}} FilterRule
- */
-
-/**
- * @param {{
- *  querySchema: Schema
- *  operatorTypes: Record<string, string>|{}
- *  limit?: number
- * }} param0
- * @param {Record<StringWithOperator, string>} reqQuery
- * @returns {{
- *  errors: ErrorsByField|null|{}
- *  filter: FilterRule|{}
- *  findOptions: object
- * }}
- */
-export const getFilterRule = (param0, reqQuery) => {
-  const { querySchema, operatorTypes, limit = LIMIT } = param0
-  const errors = {}
-  const filter = {}
-  const findOptions = { offset: 0, limit }
-
-  for (const [fieldWithOps, _value] of Object.entries(reqQuery)) {
-    const [field, ...ops] = splitByOp(fieldWithOps)
-    const operatorType = operatorTypes[field]
-
-    const { errors: _errors, validated } =
-      querySchema.validate({ [field]: normalizeJson(operatorType, _value) })
-    Object.assign(errors, _errors)
-
-    if (NO_OPERATOR_PROPS.includes(field)) {
-      findOptions[field] = validated[field]
-      if (field === 'sort' && _value) {
-        findOptions.sort = _value.split(',').reduce((curr, val) => {
-          const [field, op] = splitByOp(val)
-          curr[field] = op === '$desc' ? -1 : 1
-          return curr
-        }, {})
-      }
-      continue
-    }
-
-    if (!operatorType) {
-      errors[field] = 'unsupported property'
-      continue
-    }
-
-    const value = normalize(operatorType, _value)
-
-    const allowedOps = OPERATORS[operatorType] || []
-    filter[field] = {
-      type: operatorType
-    }
-    if (!ops.length) {
-      filter[field].$eq = value
-    }
-    for (const op of ops) {
-      if (!allowedOps.includes(op)) {
-        errors[field] = `unsupported operator ${op}`
-        break
-      }
-      filter[field][op] = value
-    }
+export function getSort (value) {
+  if (Array.isArray(value)) {
+    return value
   }
-
-  return {
-    errors: Object.keys(errors).length ? errors : null,
-    filter,
-    findOptions
+  if (typeof value === 'string') {
+    return value.split(',')
+      .map((val) => {
+        const [field, op] = splitByOp(val)
+        return { [field]: op === '$desc' ? -1 : 1 }
+      })
   }
 }
+
+const intersection = (arr, comp) =>
+  arr.filter(item => comp.some((el) => el === item))

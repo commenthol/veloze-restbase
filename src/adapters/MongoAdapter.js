@@ -138,6 +138,8 @@ export class MongoAdapter extends Adapter {
       deletedAt: { $exists: false }
     }
     const _findOptions = convertFindOptions(findOptions)
+    // console.dir(_filter, { depth: null })
+    log.debug(_filter, _findOptions)
     const cursor = await this._model.find(_filter, _findOptions)
     const obj = {}
     obj.data = await cursor.toArray()
@@ -170,6 +172,7 @@ export class MongoAdapter extends Adapter {
 }
 
 /**
+ * @see https://www.mongodb.com/docs/manual/reference/operator/query
  * @param {object} filterRule
  * @returns {object} mongo filter
  */
@@ -184,60 +187,67 @@ const convertFilterRule = (filterRule) => {
 
     const isCs = !!rules.$cs
     const isNot = !!rules.$not
-    const type = rules.type
 
     let tmp
-    if (type === 'array') {
-      if (Array.isArray(rules.$eq)) {
-        filter.$and = filter.$and || []
-        filter.$and.push({ $or: rules.$eq.map(item => ({ [field]: item })) })
-      }
+    // if (['$not'].includes(field)) {
+    //   filter[field] = convertFilterRule(rules)
+    //   continue
+    // } else
+    if (['$and', '$or'].includes(field)) {
+      filter[field] = rules.map(rule => convertFilterRule(rule))
       continue
-    } else if (type === 'string') {
-      for (const [op, value] of Object.entries(rules)) {
-        const esc = escapeRegExp(isCs ? value : value.toLowerCase())
+    }
+    if (Array.isArray(rules.$eq)) {
+      filter.$and = filter.$and || []
+      filter.$and.push({ $or: rules.$eq.map(item => ({ [field]: item })) })
+      continue
+    }
+    for (const [op, value] of Object.entries(rules)) {
+      const esc = typeof value === 'string' && escapeRegExp(isCs ? value : value.toLowerCase())
 
-        switch (op) {
-          case '$like': {
-            const re = new RegExp(esc, isCs ? '' : 'i')
-            tmp = isNot ? { $not: re } : re
-            break
-          }
-          case '$starts': {
-            const re = new RegExp('^' + esc, isCs ? '' : 'i')
-            tmp = isNot ? { $not: re } : re
-            break
-          }
-          case '$ends': {
-            const re = new RegExp(esc + '$', isCs ? '' : 'i')
-            tmp = isNot ? { $not: re } : re
-            break
-          }
-          case '$cs':
-          case '$eq':
-          case '$not': {
-            if (tmp) break
-            const re = isCs ? value : new RegExp('^' + esc + '$', 'i')
-            tmp = isNot ? { $not: re } : re
-            break
-          }
-        }
-      }
-    } else {
-      // 'number', 'date'
-      tmp = {}
-      for (const [op, value] of Object.entries(rules)) {
-        if (op === 'type') {
-          continue
-        }
-        if (op === '$eq') {
-          tmp = value
+      switch (op) {
+        case '$like': {
+          const re = new RegExp(esc, isCs ? '' : 'i')
+          tmp = isNot ? { $not: re } : re
           break
         }
-        tmp[op] = value
+        case '$starts': {
+          const re = new RegExp('^' + esc, isCs ? '' : 'i')
+          tmp = isNot ? { $not: re } : re
+          break
+        }
+        case '$ends': {
+          const re = new RegExp(esc + '$', isCs ? '' : 'i')
+          tmp = isNot ? { $not: re } : re
+          break
+        }
+        case '$cs':
+        case '$not':
+        case '$eq': {
+          if (tmp !== undefined) break
+          switch (typeof value) {
+            case 'string': {
+              const re = isCs ? value : new RegExp('^' + esc + '$', 'i')
+              tmp = isNot ? { $not: re } : re
+              break
+            }
+            default:
+              // type number, boolean
+              tmp = value
+          }
+          break
+        }
+        case '$lt':
+        case '$lte':
+        case '$gt':
+        case '$gte':
+        case '$ne': {
+          tmp = tmp || {}
+          tmp[op] = value
+          break
+        }
       }
     }
-
     filter[field] = tmp
   }
 
@@ -272,8 +282,11 @@ const convertFindOptions = (findOptions) => {
       options.projection[field] = 1
     }
   }
-  if (sort && typeof sort === 'object') {
-    options.sort = sort
+  if (Array.isArray(sort)) {
+    options.sort = sort.reduce((curr, opts) => {
+      Object.assign(curr, opts)
+      return curr
+    }, {})
   }
 
   return options

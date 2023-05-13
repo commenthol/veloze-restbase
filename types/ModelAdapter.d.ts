@@ -6,10 +6,20 @@ export class ModelAdapter {
     constructor(adapter: Adapter, options?: ModelAdapterOptions | undefined);
     _adapter: import("../src/adapters/Adapter").Adapter;
     _schema: import("./Schema.js").Schema;
-    _querySchemaTypes: {
-        querySchema: import("./Schema.js").Schema;
-        queryJsonSchema: any;
-        operatorTypes: {} | Record<string, string>;
+    _querySchema: {
+        schema: import("./Schema.js").Schema;
+        validate: (query: Record<string, string>) => {
+            errors: {} | import("./utils/query.js").ErrorsByField | null;
+            filter: {} | import("./utils/query.js").FilterRule;
+            findOptions: any;
+        };
+    };
+    _searchSchema: {
+        validate: (body: any) => {
+            errors?: {} | import("./utils/query.js").ErrorsByField | null | undefined;
+            filter?: {} | import("./utils/query.js").FilterRule | undefined;
+            findOptions?: any;
+        };
     };
     _randomUuid: Function;
     get modelName(): string;
@@ -38,6 +48,12 @@ export class ModelAdapter {
      * @returns {Promise<object>} found items
      */
     findMany(query: object): Promise<object>;
+    searchMany(body: any): Promise<{
+        offset: any;
+        limit: any;
+        count: any;
+        data: any;
+    }>;
     /**
      * delete doc from database
      * @param {string} id
@@ -48,4 +64,5 @@ export class ModelAdapter {
 export type Adapter = import('../src/adapters/Adapter').Adapter;
 export type ModelAdapterOptions = {
     randomUuid?: Function | undefined;
+    limit?: number | undefined;
 };

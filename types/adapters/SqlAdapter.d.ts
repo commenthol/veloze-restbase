@@ -65,13 +65,12 @@ import { Adapter } from './Adapter.js';
  */
 declare function schemaToModel(schema: Schema | object): object;
 /**
- * see https://sequelize.org/docs/v6/core-concepts/model-querying-basics/
+ * @see https://sequelize.org/docs/v6/core-concepts/model-querying-basics/
  */
 declare function convertFilterRule(filterRule: any): {};
 declare function convertFindOptions(findOptions: any): {
     offset: number;
     limit: number;
-    attributes: any[];
-    order: any[];
+    order: string[][];
 };
 export {};
