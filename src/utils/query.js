@@ -42,8 +42,8 @@ import { Schema } from '../Schema.js'
  * @typedef {string} StringWithOperator
  */
 
-export const NUMBER_OPS = ['gt', 'gte', 'lt', 'lte', 'ne']
-export const STRING_OPS = ['starts', 'like', 'ends', 'not', 'cs']
+export const NUMBER_OPS = ['$gt', '$gte', '$lt', '$lte', '$ne']
+export const STRING_OPS = ['$starts', '$like', '$ends', '$not', '$cs']
 
 const OPERATORS = {
   number: NUMBER_OPS,
@@ -53,8 +53,6 @@ const OPERATORS = {
 }
 
 const NO_OPERATOR_PROPS = ['offset', 'limit', 'fields', 'sort', 'countDocs']
-
-const OP_SEP = '$'
 
 /**
  * creates a query json schema to validate correctness of values
@@ -136,7 +134,7 @@ export const getQuerySchema = (schema) => {
  * @param {*} [sep=',']
  * @returns {string[]}
  */
-const split = (str, sep = ',') => {
+const splitDoubleEnc = (str, sep = ',') => {
   const arr = []
   let tmp = ''
   for (let i = 0; i < [...str].length; i++) {
@@ -158,11 +156,12 @@ const split = (str, sep = ',') => {
   return arr
 }
 
+const splitByOp = (str, sep = '$') => str.split(sep).map((item, i) => i === 0 ? item : `$${item}`)
+
 const normalizeJson = (operatorType, value) => {
   switch (operatorType) {
     case 'array':
-      return split(value || '')
-      // return String(value || '').split(',').map(item => item.trim()).filter(Boolean)
+      return splitDoubleEnc(value || '')
     case 'number':
     case 'integer':
       return isNaN(Number(value))
@@ -208,7 +207,7 @@ export const getFilterRule = (param0, reqQuery) => {
   const findOptions = { offset: 0, limit }
 
   for (const [fieldWithOps, _value] of Object.entries(reqQuery)) {
-    const [field, ...ops] = fieldWithOps.split(OP_SEP)
+    const [field, ...ops] = splitByOp(fieldWithOps)
     const operatorType = operatorTypes[field]
 
     const { errors: _errors, validated } =
@@ -219,8 +218,8 @@ export const getFilterRule = (param0, reqQuery) => {
       findOptions[field] = validated[field]
       if (field === 'sort' && _value) {
         findOptions.sort = _value.split(',').reduce((curr, val) => {
-          const [field, op] = val.split(OP_SEP)
-          curr[field] = op === 'desc' ? -1 : 1
+          const [field, op] = splitByOp(val)
+          curr[field] = op === '$desc' ? -1 : 1
           return curr
         }, {})
       }
@@ -239,7 +238,7 @@ export const getFilterRule = (param0, reqQuery) => {
       type: operatorType
     }
     if (!ops.length) {
-      filter[field].eq = value
+      filter[field].$eq = value
     }
     for (const op of ops) {
       if (!allowedOps.includes(op)) {

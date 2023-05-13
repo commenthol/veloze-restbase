@@ -182,15 +182,15 @@ const convertFilterRule = (filterRule) => {
       continue
     }
 
-    const isCs = !!rules.cs
-    const isNot = !!rules.not
+    const isCs = !!rules.$cs
+    const isNot = !!rules.$not
     const type = rules.type
 
     let tmp
     if (type === 'array') {
-      if (Array.isArray(rules.eq)) {
+      if (Array.isArray(rules.$eq)) {
         filter.$and = filter.$and || []
-        filter.$and.push({ $or: rules.eq.map(item => ({ [field]: item })) })
+        filter.$and.push({ $or: rules.$eq.map(item => ({ [field]: item })) })
       }
       continue
     } else if (type === 'string') {
@@ -198,24 +198,24 @@ const convertFilterRule = (filterRule) => {
         const esc = escapeRegExp(isCs ? value : value.toLowerCase())
 
         switch (op) {
-          case 'like': {
+          case '$like': {
             const re = new RegExp(esc, isCs ? '' : 'i')
             tmp = isNot ? { $not: re } : re
             break
           }
-          case 'starts': {
+          case '$starts': {
             const re = new RegExp('^' + esc, isCs ? '' : 'i')
             tmp = isNot ? { $not: re } : re
             break
           }
-          case 'ends': {
+          case '$ends': {
             const re = new RegExp(esc + '$', isCs ? '' : 'i')
             tmp = isNot ? { $not: re } : re
             break
           }
-          case 'cs':
-          case 'eq':
-          case 'not': {
+          case '$cs':
+          case '$eq':
+          case '$not': {
             if (tmp) break
             const re = isCs ? value : new RegExp('^' + esc + '$', 'i')
             tmp = isNot ? { $not: re } : re
@@ -230,11 +230,11 @@ const convertFilterRule = (filterRule) => {
         if (op === 'type') {
           continue
         }
-        if (op === 'eq') {
+        if (op === '$eq') {
           tmp = value
           break
         }
-        tmp['$' + op] = value
+        tmp[op] = value
       }
     }
 

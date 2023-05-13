@@ -102,24 +102,24 @@ describe('utils/query', function () {
       assert.deepEqual(result.filter, {
         createdAt: {
           type: 'date',
-          gte: new Date('2023-01-03T00:00:00.000Z')
+          $gte: new Date('2023-01-03T00:00:00.000Z')
         },
         item: {
           type: 'string',
-          like: 'pap',
-          not: 'pap'
+          $like: 'pap',
+          $not: 'pap'
         },
         status: {
           type: 'string',
-          like: 'D'
+          $like: 'D'
         },
         unit: {
           type: 'string',
-          cs: 'cm'
+          $cs: 'cm'
         },
         width: {
           type: 'number',
-          lt: 15
+          $lt: 15
         }
       })
       assert.deepEqual(result.findOptions, {
@@ -148,9 +148,9 @@ describe('utils/query', function () {
       assert.deepEqual(result.errors, {
         fields: 'must be equal to one of the allowed values',
         notThere: 'unsupported property',
-        status: 'unsupported operator notlike',
+        status: 'unsupported operator $notlike',
         width: 'must be number',
-        createdAt: 'unsupported operator like'
+        createdAt: 'unsupported operator $like'
       })
       assert.deepEqual(result.filter, {
         createdAt: {
@@ -158,19 +158,19 @@ describe('utils/query', function () {
         },
         item: {
           type: 'string',
-          like: 'pap',
-          not: 'pap'
+          $like: 'pap',
+          $not: 'pap'
         },
         status: {
           type: 'string'
         },
         unit: {
           type: 'string',
-          cs: 'cm'
+          $cs: 'cm'
         },
         width: {
           type: 'number',
-          gte: '10a'
+          $gte: '10a'
         }
       })
       assert.deepEqual(result.findOptions, {
@@ -185,7 +185,7 @@ describe('utils/query', function () {
       const result = getFilterRule(querySchemaOperatorTypes, reqQuery)
       assert.deepEqual(result.filter, {
         id: {
-          eq: ['10,12', '14'],
+          $eq: ['10,12', '14'],
           type: 'array'
         }
       })
@@ -223,38 +223,38 @@ describe('utils/query', function () {
         assert.deepEqual(result.filter, {
           ends: {
             type: 'string',
-            ends: '^End$'
+            $ends: '^End$'
           },
           equal: {
             type: 'string',
-            eq: 'EquaL'
+            $eq: 'EquaL'
           },
           like: {
             type: 'string',
-            like: 'lIke'
+            $like: 'lIke'
           },
           notEnds: {
             type: 'string',
-            ends: '!^End$',
-            not: '!^End$'
+            $ends: '!^End$',
+            $not: '!^End$'
           },
           notEqual: {
             type: 'string',
-            not: '!EquaL'
+            $not: '!EquaL'
           },
           notLike: {
             type: 'string',
-            like: '!lIke',
-            not: '!lIke'
+            $like: '!lIke',
+            $not: '!lIke'
           },
           notStarts: {
             type: 'string',
-            not: '!START$',
-            starts: '!START$'
+            $not: '!START$',
+            $starts: '!START$'
           },
           starts: {
             type: 'string',
-            starts: 'START$'
+            $starts: 'START$'
           }
         })
       })
@@ -275,45 +275,45 @@ describe('utils/query', function () {
         assert.deepEqual(result.filter, {
           ends: {
             type: 'string',
-            cs: '^End$',
-            ends: '^End$'
+            $cs: '^End$',
+            $ends: '^End$'
           },
           equal: {
             type: 'string',
-            cs: 'EquaL'
+            $cs: 'EquaL'
           },
           like: {
             type: 'string',
-            cs: 'lIke',
-            like: 'lIke'
+            $cs: 'lIke',
+            $like: 'lIke'
           },
           notEnds: {
             type: 'string',
-            cs: '!^End$',
-            ends: '!^End$',
-            not: '!^End$'
+            $cs: '!^End$',
+            $ends: '!^End$',
+            $not: '!^End$'
           },
           notEqual: {
             type: 'string',
-            cs: '!EquaL',
-            not: '!EquaL'
+            $cs: '!EquaL',
+            $not: '!EquaL'
           },
           notLike: {
             type: 'string',
-            cs: '!lIke',
-            like: '!lIke',
-            not: '!lIke'
+            $cs: '!lIke',
+            $like: '!lIke',
+            $not: '!lIke'
           },
           notStarts: {
             type: 'string',
-            cs: '!START$',
-            not: '!START$',
-            starts: '!START$'
+            $cs: '!START$',
+            $not: '!START$',
+            $starts: '!START$'
           },
           starts: {
             type: 'string',
-            cs: 'START$',
-            starts: 'START$'
+            $cs: 'START$',
+            $starts: 'START$'
           }
         })
       })

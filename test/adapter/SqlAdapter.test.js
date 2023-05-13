@@ -219,7 +219,7 @@ describe('adapters/SqlAdapter', function () {
       it('equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { eq: VALUE, type: 'string' }
+            str: { $eq: VALUE, type: 'string' }
           }),
           {
             str: VALUE
@@ -230,7 +230,7 @@ describe('adapters/SqlAdapter', function () {
       it('equal case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { cs: VALUE, type: 'string' }
+            str: { $cs: VALUE, type: 'string' }
           }),
           {
             str: VALUE
@@ -241,7 +241,7 @@ describe('adapters/SqlAdapter', function () {
       it('not equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { not: VALUE, type: 'string' }
+            str: { $not: VALUE, type: 'string' }
           }),
           {
             str: { [Op.not]: VALUE }
@@ -252,7 +252,7 @@ describe('adapters/SqlAdapter', function () {
       it('not equal case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { not: VALUE, cs: VALUE, type: 'string' }
+            str: { $not: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.not]: VALUE }
@@ -263,7 +263,7 @@ describe('adapters/SqlAdapter', function () {
       it('like', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { like: VALUE, type: 'string' }
+            str: { $like: VALUE, type: 'string' }
           }),
           {
             str: { [Op.like]: '%vAl\\%uE$%' }
@@ -274,7 +274,7 @@ describe('adapters/SqlAdapter', function () {
       it('like case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { like: VALUE, cs: VALUE, type: 'string' }
+            str: { $like: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.like]: '%vAl\\%uE$%' }
@@ -285,7 +285,7 @@ describe('adapters/SqlAdapter', function () {
       it('not like', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { not: VALUE, like: VALUE, type: 'string' }
+            str: { $not: VALUE, $like: VALUE, type: 'string' }
           }),
           {
             str: { [Op.notLike]: '%vAl\\%uE$%' }
@@ -296,7 +296,7 @@ describe('adapters/SqlAdapter', function () {
       it('not like case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { like: VALUE, not: VALUE, cs: VALUE, type: 'string' }
+            str: { $like: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.notLike]: '%vAl\\%uE$%' }
@@ -307,7 +307,7 @@ describe('adapters/SqlAdapter', function () {
       it('starts', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { starts: VALUE, type: 'string' }
+            str: { $starts: VALUE, type: 'string' }
           }),
           {
             str: { [Op.startsWith]: VALUE }
@@ -318,7 +318,7 @@ describe('adapters/SqlAdapter', function () {
       it('starts case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { starts: VALUE, cs: VALUE, type: 'string' }
+            str: { $starts: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.startsWith]: VALUE }
@@ -329,7 +329,7 @@ describe('adapters/SqlAdapter', function () {
       it('not starts', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { not: VALUE, starts: VALUE, type: 'string' }
+            str: { $not: VALUE, $starts: VALUE, type: 'string' }
           }),
           {
             str: { [Op.not]: { [Op.startsWith]: VALUE } }
@@ -340,7 +340,7 @@ describe('adapters/SqlAdapter', function () {
       it('not starts case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { starts: VALUE, not: VALUE, cs: VALUE, type: 'string' }
+            str: { $starts: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.not]: { [Op.startsWith]: VALUE } }
@@ -351,7 +351,7 @@ describe('adapters/SqlAdapter', function () {
       it('ends', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { ends: VALUE, type: 'string' }
+            str: { $ends: VALUE, type: 'string' }
           }),
           {
             str: { [Op.endsWith]: VALUE }
@@ -362,7 +362,7 @@ describe('adapters/SqlAdapter', function () {
       it('ends case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { ends: VALUE, cs: VALUE, type: 'string' }
+            str: { $ends: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.endsWith]: VALUE }
@@ -373,7 +373,7 @@ describe('adapters/SqlAdapter', function () {
       it('not ends', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { not: VALUE, ends: VALUE, type: 'string' }
+            str: { $not: VALUE, $ends: VALUE, type: 'string' }
           }),
           {
             str: { [Op.not]: { [Op.endsWith]: VALUE } }
@@ -384,7 +384,7 @@ describe('adapters/SqlAdapter', function () {
       it('not ends case sensitive', function () {
         assert.deepEqual(
           convertFilterRule({
-            str: { ends: VALUE, not: VALUE, cs: VALUE, type: 'string' }
+            str: { $ends: VALUE, $not: VALUE, $cs: VALUE, type: 'string' }
           }),
           {
             str: { [Op.not]: { [Op.endsWith]: VALUE } }
@@ -397,7 +397,7 @@ describe('adapters/SqlAdapter', function () {
       it('equals', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { eq: 10, type: 'number' }
+            num: { $eq: 10, type: 'number' }
           }),
           {
             num: 10
@@ -408,7 +408,7 @@ describe('adapters/SqlAdapter', function () {
       it('not equals', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { ne: 10, type: 'number' }
+            num: { $ne: 10, type: 'number' }
           }),
           {
             num: { [Op.ne]: 10 }
@@ -419,7 +419,7 @@ describe('adapters/SqlAdapter', function () {
       it('less than', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { lt: 10, type: 'number' }
+            num: { $lt: 10, type: 'number' }
           }),
           {
             num: { [Op.lt]: 10 }
@@ -430,7 +430,7 @@ describe('adapters/SqlAdapter', function () {
       it('less than equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { lte: 10, type: 'number' }
+            num: { $lte: 10, type: 'number' }
           }),
           {
             num: { [Op.lte]: 10 }
@@ -441,7 +441,7 @@ describe('adapters/SqlAdapter', function () {
       it('greater than', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { gt: 10, type: 'number' }
+            num: { $gt: 10, type: 'number' }
           }),
           {
             num: { [Op.gt]: 10 }
@@ -452,7 +452,7 @@ describe('adapters/SqlAdapter', function () {
       it('greater than equal', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { gte: 10, type: 'number' }
+            num: { $gte: 10, type: 'number' }
           }),
           {
             num: { [Op.gte]: 10 }
@@ -463,7 +463,7 @@ describe('adapters/SqlAdapter', function () {
       it('range', function () {
         assert.deepEqual(
           convertFilterRule({
-            num: { gt: 5, lte: 10, type: 'number' }
+            num: { $gt: 5, $lte: 10, type: 'number' }
           }),
           {
             num: { [Op.lte]: 10, [Op.gt]: 5 }
@@ -476,7 +476,7 @@ describe('adapters/SqlAdapter', function () {
       it('query for multiple fields', function () {
         assert.deepStrictEqual(
           convertFilterRule({
-            id: { eq: ['10', '12', '14'], type: 'array' }
+            id: { $eq: ['10', '12', '14'], type: 'array' }
           }),
           {
             [Op.and]: [{ [Op.or]: [{ id: '10' }, { id: '12' }, { id: '14' }] }]

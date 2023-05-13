@@ -210,38 +210,38 @@ function convertFilterRule (filterRule) {
       continue
     }
 
-    // const isCs = !!rules.cs
-    const isNot = !!rules.not
+    // const isCs = !!rules.$cs
+    const isNot = !!rules.$not
     const type = rules.type
 
     let tmp
     if (type === 'array') {
-      if (Array.isArray(rules.eq)) {
+      if (Array.isArray(rules.$eq)) {
         filter[Op.and] = filter[Op.and] || []
-        filter[Op.and].push({ [Op.or]: rules.eq.map(item => ({ [field]: item })) })
+        filter[Op.and].push({ [Op.or]: rules.$eq.map(item => ({ [field]: item })) })
       }
       continue
     } else if (type === 'string') {
       for (const [op, value] of Object.entries(rules)) {
         switch (op) {
-          case 'like': {
+          case '$like': {
             const _op = isNot ? Op.notLike : Op.like
             tmp = { [_op]: `%${escapeLike(value)}%` }
             break
           }
-          case 'starts': {
+          case '$starts': {
             const v = { [Op.startsWith]: value }
             tmp = isNot ? { [Op.not]: v } : v
             break
           }
-          case 'ends': {
+          case '$ends': {
             const v = { [Op.endsWith]: value }
             tmp = isNot ? { [Op.not]: v } : v
             break
           }
-          case 'cs':
-          case 'eq':
-          case 'not': {
+          case '$cs':
+          case '$eq':
+          case '$not': {
             if (tmp) break
             tmp = isNot ? { [Op.not]: value } : value
             break
@@ -255,11 +255,11 @@ function convertFilterRule (filterRule) {
         if (op === 'type') {
           continue
         }
-        if (op === 'eq') {
+        if (op === '$eq') {
           tmp = value
           break
         }
-        tmp[Op[op]] = value
+        tmp[Op[op.slice(1)]] = value
       }
     }
 
