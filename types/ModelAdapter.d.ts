@@ -63,6 +63,9 @@ export class ModelAdapter {
 }
 export type Adapter = import('../src/adapters/Adapter').Adapter;
 export type ModelAdapterOptions = {
+    /**
+     * A random UUID function which shall guarantee a strong order on time. This is required to guarantee the order of records on querying. Do not use a function like UUIDv4 unless you ensure this ordering by other means, e.g. use createdAt timestamp together with an index. Consider the use of the provided `uuid7()` method. Defaults to `nanoid()` which gives a 24 char long time based randomized id.
+     */
     randomUuid?: Function | undefined;
     limit?: number | undefined;
 };

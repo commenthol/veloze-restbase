@@ -89,7 +89,6 @@ export class SqlAdapter extends Adapter {
 
     const _indexes = [
       { fields: ['version'] },
-      { fields: ['createdAt'] },
       // @ts-ignore
       ...indexes
     ]
@@ -286,7 +285,7 @@ function convertFindOptions (findOptions) {
   const options = {
     offset: 0,
     limit: 100,
-    order: [['createdAt', 'ASC']]
+    order: [['id', 'ASC']]
   }
 
   if (typeof offset === 'number') {

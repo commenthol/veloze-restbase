@@ -84,7 +84,7 @@ declare function convertFilterRule(filterRule: object): object;
  *  offset?: number
  *  limit?: number
  *  fields?: string[]
- *  sort?: ??
+ *  sort?: object[]
  * }} findOptions
  * @returns {object}
  */
@@ -92,6 +92,6 @@ declare function convertFindOptions(findOptions: {
     offset?: number | undefined;
     limit?: number | undefined;
     fields?: string[] | undefined;
-    sort?: unknown | null;
+    sort?: any[] | undefined;
 }): object;
 export {};

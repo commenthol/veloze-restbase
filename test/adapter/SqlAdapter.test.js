@@ -576,7 +576,7 @@ describe('adapters/SqlAdapter', function () {
         {
           offset: 0,
           limit: 500,
-          order: [['createdAt', 'ASC']]
+          order: [['id', 'ASC']]
         }
       )
     })

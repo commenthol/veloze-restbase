@@ -261,12 +261,17 @@ MongoAdapter.convertFilterRule = convertFilterRule
  *  offset?: number
  *  limit?: number
  *  fields?: string[]
- *  sort?: ??
+ *  sort?: object[]
  * }} findOptions
  * @returns {object}
  */
 const convertFindOptions = (findOptions) => {
-  const { offset, limit, fields, sort } = findOptions
+  const {
+    offset,
+    limit,
+    fields,
+    sort = [{ id: 1 }]
+  } = findOptions
   const options = {
     projection: { _id: 0 }
   }
