@@ -16,7 +16,7 @@ const log = logger('SqlAdapter')
 
 const isNumber = (num) => num !== undefined && !isNaN(Number(num))
 const isSafeInt = (num) =>
-  isNumber(num) && num < MAX_SAFE_INTEGER && num > MIN_SAFE_INTEGER
+  isNumber(num) && num <= MAX_SAFE_INTEGER && num >= MIN_SAFE_INTEGER
 
 /**
  * @typedef {import('../types').Index} Index
@@ -357,9 +357,9 @@ const convert = (obj) => {
     }
     case 'integer': {
       const {
-        minimum,
+        minimum = MIN_SAFE_INTEGER,
         exclusiveMinimum,
-        maximum,
+        maximum = MAX_SAFE_INTEGER,
         exclusiveMaximum,
         default: _default
       } = obj
