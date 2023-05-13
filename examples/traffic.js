@@ -23,12 +23,13 @@ const update = (data) => supertest(url)
 
 const get = (id) => supertest(url)
   .get('/items/' + id)
-  .type('json')
+  .accept('json')
   .then(res => res.body)
 
 const find = (query) => supertest(url)
   .get('/items')
   .query(query)
+  .accept('json')
   .then(res => res.body)
 
 const main = async () => {
@@ -41,6 +42,10 @@ const main = async () => {
 
   const foundItem = await find({ item: 'paper', countDocs: true, limit: 1 })
   console.log('found>', foundItem)
+
+  if (!foundItem?.data?.length) {
+    throw new Error('no item found')
+  }
 
   {
     const { id, item, version, quantity } = foundItem.data[0]
