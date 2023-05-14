@@ -15,6 +15,8 @@ paths:
       description: |-
         find documents
 
+        <a id="query-operators-numeric"> </a>
+
         ### Query Operators numeric
 
         For properties with numeric tye the following operators can be applied:
@@ -36,6 +38,8 @@ paths:
         // height !== 17
         GET ?height%24ne=17
         ```
+
+        <a id="query-operators-string"> </a>
 
         ### Query Operators string
 
@@ -61,6 +65,33 @@ paths:
         // search all `article`s which starts-with `Jacket` case-sensitive
         GET ?article%24starts%24cs=Jacket
         ```
+
+        <a id="query-parameters"> </a>
+
+        | param     | type     | description                                                                                                                            |
+        | --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+        | offset    | integer  | pagination offset                                                                                                                      |
+        | limit     | integer  | pagination limit or size (defaults to 100 documents)                                                                                   |
+        | countDocs | boolean  | Include document count in response.                                                                                                    |
+        | fields    | string[] | comma separated list of schema properties which shall be returned.                                                                     |
+        | sort      | string[] | comma separated list of schema properties for sorting. <br>Needs `$desc` operator for descending sort. <br>Defaults to ascending sort. |
+
+        > **⚠️ NOTE:** Avoid using the params as document properties. You won't be able to
+        > query for any of these doc properties then.
+
+        **Examples**
+
+        ```js
+        // get the 2nd page for a page which contains 100 documents
+        GET ?offset=100&limit=100&countDocs=true
+
+        // get back only { id, version, item } properties from the query
+        GET ?fields=id,version,item
+
+        // sort result set by ascending `price` and descending `date`
+        GET ?sort=price,date%24desc
+        ```
+
       parameters:
         - name: id
           description: |-
@@ -318,6 +349,132 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /search:
+    post:
+      summary: Query multiple documents
+      description: |-
+        Query multiple documents.
+
+        You may also use `SEARCH /` as alternative method
+
+        Only properties which are named in the JSON-schema of the model can be used as
+        search parameters. 
+
+        All Query params from [GET /{modelName}&nbsp;](#get-modelname) can be used to
+        form complex search terms.
+
+        * [Query Operators numeric](#query-operators-numeric)
+        * [Query Operators string](#query-operators-string)
+        * [Query Parameters](#query-parameters)
+
+        Additionally the boolean operators `$and` and `$or` can be used. 
+
+        E.g. with the following JSON-Schema
+
+        ```json
+        {
+          "type": "object",
+          "properties": {
+            "item": { "type": "string" },
+            "width": { "type": "integer" } 
+          }
+        }
+        ```
+      requestBody:
+        description: |-
+          Search Request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+            examples:
+              firstTenDocs:
+                summary: Find by not item name and width
+                description: |-
+                  To search for the first 10 documents which do not contain
+                  "paper" (case-insensitive) and have a width greater 5 and less
+                  than 30, sorted by "item" and "width" (descending), where only
+                  the fields "id", "item" and "width" are returned.
+                value:
+                  offset: 0
+                  limit: 10
+                  sort:
+                    - item: 1
+                    - width: -1
+                  fields:
+                    - id
+                    - item
+                    - width
+                  $and:
+                    - item:
+                        $like: paper
+                        $not: true
+                        $cs: false
+                    - width:
+                        $gt: 5
+                        $lte: 30
+              itemByNames:
+                summary: Find item by names
+                description: |-
+                  To obtain all documents where item is "paper", "journal"
+                  sorted by "width".
+                value:
+                  fields: 
+                    - id
+                    - width
+                  sort:
+                    - width: 1
+                  item: 
+                    - paper
+                    - journal
+      responses:
+        '200':
+          description: |-
+            OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  offset:
+                    description: |- 
+                      pagination offset
+                    type: integer
+                    minimum: 0
+                  limit:
+                    description: |- 
+                      pagination limit
+                    type: integer
+                    minimum: 0
+                    default: 100
+                  count: 
+                    description: |-
+                      document count
+
+                      requires `&countDocs=true`.
+                    type: integer
+                    minimum: 0
+                    example: 42
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '400': 
+          description: |-
+            Bad Content
+
+            Schema check on provided query parameters failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                reqId: cb993711-8395-4269-a2a8-f481fbeda243
+                status: 400
+                message: validation error
+                errors:
+                  foo: unsupported property
+
 components:
   schemas:
     Document:
@@ -342,6 +499,14 @@ components:
           type: string
           format: date-time
           example: 2023-04-16T07:40:46.562Z
+    Query:
+      description: search query
+      type: object
+      anyOf:
+        - $ref: '#/components/x-defs/and'
+        - $ref: '#/components/x-defs/or'
+        - $ref: '#/components/x-defs/findOptions'
+        - $ref: '#/components/schemas/Document'
     Error:
       type: object
       required:
@@ -367,3 +532,89 @@ components:
         reqId: 10752dee-0144-4632-8b8b-164bb1bce0aa
         status: 404
         message: Not Found
+  x-defs:
+    and:
+      description: AND rule
+      type: object
+      required: 
+        - "$and":
+      properties:
+        $and: 
+          type: array 
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/Document'
+              - $ref: '#/components/x-defs/or'
+    or: 
+      description: OR rule
+      type: object
+      required: 
+        - "$or":
+      properties:
+        $or: 
+          type: array 
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/Document'
+              - $ref: '#/components/x-defs/and'
+    numberOps:
+      description: number operators
+      type: object
+      additionalProperties: false,
+      properties:
+        $gt:
+          type: number
+        $gte:
+          type: number
+        $lt:
+          type: number
+        $lte:
+          type: number
+        $ne:
+          type: number
+        $eq:
+          type: number
+    stringOps:
+      description: string operators
+      type: object
+      additionalProperties: false
+      properties:
+        $like: 
+          type: string
+        $starts: 
+          type: string
+        $ends: 
+          type: string
+        $eq: 
+          type: string
+        $not: 
+          anyOf:
+            - type: string
+            - type: boolean
+        $cs: 
+          anyOf:
+            - type: string
+            - type: boolean
+    findOptions:
+      description: find options
+      type: object
+      properties:
+        offset:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          exclusiveMinimum: -1
+        countDocs:
+          type: boolean
+        sort:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+        fields:
+          description: Any field attributed in Document
+          type: array
+          items:
+            type: string
+            enum: []
