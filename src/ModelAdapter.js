@@ -157,4 +157,13 @@ export class ModelAdapter {
     }
     return found
   }
+
+  /**
+   * delete all documents with deletedAt timestamp older than date
+   * @param {Date} [date] defaults to Date.now() - 30d
+   * @returns {Promise<object>} deleted stats
+   */
+  deleteDeleted (date) {
+    return this._adapter.deleteDeleted(date)
+  }
 }
