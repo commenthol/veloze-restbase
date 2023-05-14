@@ -87,10 +87,10 @@ describe('adapters/SqlAdapter', function () {
       })
       assert.deepEqual(model, {
         typeInteger: {
-          type: DataTypes.BIGINT
+          type: DataTypes.INTEGER
         },
         typeIntegerMultipleOf: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.INTEGER,
           defaultValue: 40
         }
       })
