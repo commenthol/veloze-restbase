@@ -6,7 +6,7 @@ Only flat objects can be stored and queried (for compatibility with relational
 databases).
 
 To uniquely identify a document an `id` is created when the record is created.
-With this, the `createdAt` and `updatedAt` timestamps are set to now.  
+With this, the `createdAt` and `updatedAt` timestamps are set to "now".  
 For optimistic locking (regardless if set in database-adapter) `version` is set
 to 1 and incremented on every update.
 

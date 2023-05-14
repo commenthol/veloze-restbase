@@ -2,7 +2,15 @@
 
 > Rest-API to database using JSON-schema
 
-Implements the common RESTful endpoints for persisting and querying documents 
+In software development we often repeat ourselves when it comes to persisting
+data. Usually you may just store data records according to a model (and its
+schema) which do not necessarily relate to another model.
+
+Here this project may help you to define a RESTful Router based on a provided
+JSON-schema. Such schema needs to be "flat" such that data can be persisted and
+queried from relational databases.
+
+It implements the common RESTful endpoints for persisting and querying documents
 based on the documents JSON-schema:
 
 - **C**reate: `POST /{modelName}`
@@ -17,7 +25,13 @@ Provides database adapters for:
 - [mongodb](https://www.mongodb.com/docs/drivers/node/current/)
 - mysql, mysql, postgres, cockroach via [sequelize](https://sequelize.org/)
 
+Uses optimistic locking by default. Optionally it allows to defer deletion of
+documents (documents are marked for deletion, but are not immediately removed;
+requires a separate cleanup job).
+
 Works also with express like routers.
+
+Please referrer to the documentation in `docs/index.md`.
 
 # Usage
 
@@ -50,19 +64,21 @@ const adapter = new MongoAdapter({
   client,
   database: "inventory",
   modelName: "items", // use plural form!!
+  optimisticLocking: true, // enables optimistic locking (by version)
+  instantDeletion: false,  // disables instant deletion of documents
   jsonSchema,
 });
 // 3. create the rest-router
 const itemsRouter = modelRouter({ adapter });
-// 4. our Server
+// 4. create a Server
 const server = new Server({ onlyHTTP1: true });
-// 5. mount the router
+// 5. mount the router to the "plural" path
 server.use("/items", itemsRouter.handle);
 // 6. start up the server
 server.listen(HTTP_PORT);
 console.info("server started %j", server.address());
 
-process.on("SIGTERM", () => {
+process.on("SIGHUP", () => {
   // 7. don't forget to close the db-connection
   client.close();
 });
