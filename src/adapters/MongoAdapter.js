@@ -158,7 +158,30 @@ export class MongoAdapter extends Adapter {
       throw new HttpError(404)
     }
     return {
-      deletedCount: result.deletedCount || result.modifiedCount
+      deletedCount: result.deletedCount || result.modifiedCount || 0
+    }
+  }
+
+  /**
+   * @see https://www.mongodb.com/docs/v6.0/tutorial/remove-documents/
+   * @see https://www.mongodb.com/docs/v6.0/tutorial/update-documents/
+   * @param {object} filter filter Rules for items
+   * @returns {Promise<{
+   *  deletedCount: number
+   * }>}
+   */
+  async deleteMany (filter) {
+    const _filter = {
+      ...convertFilterRule(filter),
+      deletedAt: { $exists: false }
+    }
+    log.debug(_filter)
+    const result = this.instantDeletion
+      ? await this._model.deleteMany(_filter)
+      : await this._model.updateMany(_filter, { $set: { deletedAt: new Date() } })
+
+    return {
+      deletedCount: result.deletedCount || result.modifiedCount || 0
     }
   }
 

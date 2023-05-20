@@ -7,13 +7,21 @@ info:
     Blueprint for OpenAPI specification
 servers:
   - url: https://api.server.test/v1/docs
-
+tags:
+  - name: query
+    description: query operation
+  - name: single
+    description: single operation
+  - name: many
+    description: bulk operation
 paths:
   /:
     get:
-      summary: find documents
+      tags:
+        - query
+      summary: Find documents
       description: |-
-        find documents
+        Find documents
 
         <a id="query-operators-numeric"> </a>
 
@@ -91,7 +99,6 @@ paths:
         // sort result set by ascending `price` and descending `date`
         GET ?sort=price,date%24desc
         ```
-
       parameters:
         - name: id
           description: |-
@@ -153,6 +160,11 @@ paths:
         '200':
           description: |-
             OK
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -186,6 +198,11 @@ paths:
             Bad Content
 
             Schema check on provided query parameters failed.
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -197,10 +214,11 @@ paths:
                 errors:
                   foo: unsupported property
     post:
-      summary: create new document
+      tags:
+        - single
+      summary: Create new document
       description: |-
-        create a new document
-      
+        Create a new document
       requestBody:
         description: |-
           Do not provide `id`, `version`, `createdAt` property. This is handled by the service.
@@ -212,6 +230,11 @@ paths:
       responses:
         '201':
           description: Created
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -221,6 +244,11 @@ paths:
             Bad Content
 
             Validation errors
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -232,11 +260,69 @@ paths:
                 errors:
                   quantity: must be integer
                   item: must have required property 'item'
+    put:
+      tags:
+        - many
+      summary: Update multiple documents
+      description: |-
+        Update multiple documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                maxItems: 10000
+                $ref: '#/components/schemas/Document'
+            examples:
+              insert:
+                summary: Update two documents
+                value:
+                  - {"id": "0lgg8pg824co0Z3dHVGDOqDm", "version": 1, "count": 3}
+                  - {"id": "0lgg8s0tepN75w82I8DyoyII", "version": 5, "item":"scissor" }
+      responses:
+        '200':
+          description: |-
+            OK
+
+            The status code is always 200.
+
+            In case that a document can't be created then an error is returned
+            for that position in the response array. 
+
+            Such errors will NOT contain an `id` field but contain a `status`
+            field with the error code.
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  anyOf:
+                    - $ref: '#/components/schemas/Document'
+                    - type: object
+                      properties:
+                        status:
+                          type: integer
+                          example: 400
+                        message: 
+                          type: string
+                          example: validation error
+                        errors:
+                          type: object
+                          example:
+                            foo: unsupported property
   /{id}:
     get:
-      summary: get document by id
+      tags:
+        - single
+      summary: Get document by id
       description: |-
-        get a document by id
+        Get a document by id
       parameters:
         - name: id
           description: document id
@@ -247,20 +333,32 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Document'
         '404':
           description: Not Found
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
     put:
-      summary: update document by id
+      tags:
+        - single
+      summary: Update document by id
       description: |-
-        update document by id
+        Update document by id
       parameters:
         - name: id
           description: document id
@@ -278,7 +376,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Document'
             example:
-              id: sA2hGb4ziJjL2Q6K9AqMJK4l
+              id: 0lgg8pg824co0Z3dHVGDOqDm
               version: 2
       responses:
         '200':
@@ -286,6 +384,11 @@ paths:
             OK
 
             the updated document is returned.
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -295,6 +398,11 @@ paths:
             Bad Content
 
             Validation errors
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -308,6 +416,11 @@ paths:
                   item: must have required property 'item'
         '404':
           description: Not Found
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -321,6 +434,11 @@ paths:
 
             Fetch the document with GET /{id} and resolve
             the conflict before updating again,
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -330,9 +448,11 @@ paths:
                 status: 409
                 message: Conflict
     delete:
-      summary: delete document by id
+      tags:
+        - single
+      summary: Delete document by id
       description: |-
-        delete a document by document id
+        Delete a document by document id
       parameters:
         - name: id
           description: document id
@@ -343,14 +463,26 @@ paths:
       responses:
         '204':
           description: No Content
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
         '404':
           description: Not Found
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
   /search:
     post:
+      tags:
+        - query
       summary: Query multiple documents
       description: |-
         Query multiple documents.
@@ -431,6 +563,11 @@ paths:
         '200':
           description: |-
             OK
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -464,6 +601,163 @@ paths:
             Bad Content
 
             Schema check on provided query parameters failed.
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                reqId: cb993711-8395-4269-a2a8-f481fbeda243
+                status: 400
+                message: validation error
+                errors:
+                  foo: unsupported property
+  /create:
+    post:
+      tags:
+        - many
+      summary: Create multiple documents
+      description: |-
+        Create multiple documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                maxItems: 10000
+                $ref: '#/components/schemas/Document'
+            examples:
+              insert:
+                summary: Insert two documents
+                value:
+                  - {"item":"paper","count":2}
+                  - {"item":"scissor","count":7}
+          # application/x-ndjson:
+          #   schema:
+          #     type: string
+          #   examples:
+          #     insert:
+          #       summary: Insert two documents
+          #       description: |-
+          #         ````
+          #         {"item":"paper","count":2}
+          #         {"item":"scissor","count":7}
+          #         ````
+          #       value: ""
+      responses:
+        '201':
+          description: |-
+            Created
+
+            The status code is always 201.
+
+            In case that a document can't be created then an error is returned
+            for that position in the response array. 
+
+            Such errors will NOT contain an `id` field but contain a `status`
+            field with the error code.
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  anyOf:
+                    - $ref: '#/components/schemas/Document'
+                    - type: object
+                      properties:
+                        status:
+                          type: integer
+                          example: 400
+                        message: 
+                          type: string
+                          example: validation error
+                        errors:
+                          type: object
+                          example:
+                            foo: unsupported property
+  /delete:
+    post:
+      tags:
+        - many
+      summary: Delete multiple documents
+      description: |-
+        Delete multiple documents by id
+      requestBody:
+        # description: 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+            examples:
+              deleteItemsById:
+                summary: Delete documents by id
+                description: |-
+                  Delete several documents by id
+                value:
+                  id: 
+                    - 0lghmuf7i4saAnivZRjd7Zx2
+                    - 0lghmufr3BtmVdblcIxWywnR
+                    - 0lghmug97FftrdLlyMbcoPX5
+                    - 0lghmugq6Efpj2Lul2gLlj26
+              deleteNotPaper:
+                summary: Find by not item name and width
+                description: |-
+                  Delete all documents which do not contain
+                  "paper" (case-insensitive) and have a width greater 5 and less
+                  than 30.
+                value:
+                  $and:
+                    - item:
+                        $like: paper
+                        $not: true
+                        $cs: false
+                    - width:
+                        $gt: 5
+                        $lte: 30
+      responses:
+        '200':
+          description: |-
+            OK
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deletedCount: 
+                    description: |-
+                      Deleted documents count
+                    type: integer
+                    minimum: 0
+                    example: 42
+                  # data:
+                  #   type: array
+                  #   items:
+                  #     $ref: '#/components/schemas/Document'
+        '400': 
+          description: |-
+            Bad Content
+
+            Schema check on provided query parameters failed.
+          headers:
+            x-request-id:
+              description: correlation id of the request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -484,7 +778,7 @@ components:
         id:
           description: document id
           type: string
-          example: sA2hGb4ziJjL2Q6K9AqMJK4l
+          example: 0lgg8pg824co0Z3dHVGDOqDm
         version:
           description: document version
           type: integer

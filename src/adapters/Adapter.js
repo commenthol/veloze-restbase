@@ -154,11 +154,25 @@ export class Adapter {
   /**
    * delete document from database
    * @param {string} id
-   * @returns {Promise<object>} deleted stats
+   * @returns {Promise<{
+   *  deletedCount: number
+   * }>} deleted stats
    */
   /* c8 ignore next 3 */
   async deleteById (id) {
-    return {}
+    return { deletedCount: 0 }
+  }
+
+  /**
+   * delete many documents in database
+   * @param {object} filter filter Rules for items
+   * @returns {Promise<{
+   *  deletedCount: number
+   * }>} deleted stats
+   */
+  /* c8 ignore next 3 */
+  async deleteMany (filter) {
+    return { deletedCount: 0 }
   }
 
   /**

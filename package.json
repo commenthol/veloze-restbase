@@ -35,7 +35,8 @@
     "test": "mocha",
     "types": "node scripts/types",
     "dc": "docker-compose -f ./scripts/docker-compose.yaml",
-    "dcup": "npm run dc -- up -d"
+    "dc:up": "npm run dc -- up -d",
+    "dc:down": "npm run dc -- down"
   },
   "mocha": {
     "color": true,
@@ -47,7 +48,8 @@
     "debug-level": "^3.0.0",
     "deepmerge": "^4.3.1",
     "sequelize": "^6.31.1",
-    "veloze": "^0.4.1"
+    "veloze": "^0.4.1",
+    "@search-dump/jsonstream": "^1.5.0"
   },
   "devDependencies": {
     "@types/node": "^18.16.8",

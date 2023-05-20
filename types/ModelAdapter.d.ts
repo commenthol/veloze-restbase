@@ -60,7 +60,28 @@ export class ModelAdapter {
      * @returns {Promise<object>}
      */
     deleteById(id: string): Promise<object>;
+    /**
+     * delete all documents with deletedAt timestamp older than date
+     * @param {Date} [date] defaults to Date.now() - 30d
+     * @returns {Promise<object>} deleted stats
+     */
+    deleteDeleted(date?: Date | undefined): Promise<object>;
+    /**
+     * @param {Request} req
+     * @param {Response} res
+     */
+    createMany(req: Request, res: Response): void;
+    /**
+     * @param {Request} req
+     * @param {Response} res
+     */
+    updateMany(req: Request, res: Response): void;
+    deleteMany(body: any): Promise<{
+        deletedCount: number;
+    }>;
 }
+export type Request = import('veloze/types').Request;
+export type Response = import('veloze/types').Response;
 export type Adapter = import('../src/adapters/Adapter').Adapter;
 export type ModelAdapterOptions = {
     /**

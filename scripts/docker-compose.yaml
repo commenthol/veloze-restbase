@@ -1,7 +1,8 @@
 version: "3"
 services:
   mariadb:
-    image: docker.io/library/mariadb:latest
+    # https://hub.docker.com/_/mariadb
+    image: docker.io/library/mariadb:10.11
     ports:
       - "3306:3306"
     environment:
@@ -9,7 +10,8 @@ services:
 
   # see https://www.cockroachlabs.com/docs/stable/start-a-local-cluster-in-docker-mac.html#start-a-single-node-cluster
   cockroach:
-    image: docker.io/cockroachdb/cockroach:latest
+    # https://hub.docker.com/r/cockroachdb/cockroach
+    image: docker.io/cockroachdb/cockroach:latest-v23.1
     ports:
       - "26257:26257"
       - "8080:8080"
@@ -20,7 +22,8 @@ services:
     command: start-single-node --advertise-addr 'localhost' --insecure
 
   postgres:
-    image: docker.io/library/postgres:alpine
+    # https://hub.docker.com/_/postgres
+    image: docker.io/library/postgres:alpine3.18
     ports:
       - "5432:5432"
     environment:
@@ -28,7 +31,8 @@ services:
       - POSTGRES_PASSWORD=example
 
   mongodb:
-    image: docker.io/library/mongo:latest
+    # https://hub.docker.com/_/mongo
+    image: docker.io/library/mongo:6.0
     ports:
       - "27017:27017"
     environment:

@@ -9,6 +9,7 @@
  * @property {Handler|Handler[]} [find]
  * @property {Handler|Handler[]} [search]
  * @property {Handler|Handler[]} [deleteById]
+ * @property {Handler|Handler[]} [delete]
  */
 /**
  * @typedef {object} SetupRestOptions
@@ -31,6 +32,7 @@ export type Hooks = {
     find?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
     search?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
     deleteById?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
+    delete?: import("veloze/types").Handler | import("veloze/types").Handler[] | undefined;
 };
 export type SetupRestOptions = {
     adapter: import('../src/adapters/Adapter.js').Adapter;

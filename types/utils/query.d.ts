@@ -63,7 +63,7 @@ export function getFindOptionsSchema(fields: any): {
         };
     };
 };
-export function splitDoubleEnc(str: any, sep?: string): string[];
+export function splitDoubleEnc(str: string, sep?: any): string[];
 export function splitByOp(str: any, sep?: string): any;
 export function normalizeJson(operatorType: any, value: any): any;
 export function normalize(operatorType: any, value: any): any;

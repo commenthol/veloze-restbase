@@ -1,8 +1,13 @@
 import { HttpError } from 'veloze'
 import { logger, nanoid, querySchema, searchSchema } from './utils/index.js'
 import { LIMIT } from './constants.js'
+import { Transform } from 'node:stream'
+import JsonStream from '@search-dump/jsonstream'
 
 /**
+ * @typedef {import('veloze/types').Request} Request
+ * @typedef {import('veloze/types').Response} Response
+ *
  * @typedef {import('../src/adapters/Adapter').Adapter} Adapter
  *
  * @typedef {object} ModelAdapterOptions
@@ -166,4 +171,111 @@ export class ModelAdapter {
   deleteDeleted (date) {
     return this._adapter.deleteDeleted(date)
   }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  createMany (req, res) {
+    const transform = new ObjTransform({ res, fn: this.create.bind(this) })
+    res.setHeader(CONTENT_TYPE, MIME_JSON)
+    res.setHeader(X_REQUEST_ID, req.id || UNDEF_REQ_ID)
+    const jsonStream = JsonStream.parse('.*')
+    jsonStream.on('error', () => {
+      res.end(manyError(new HttpError(400, 'Invalid JSON'), res))
+    })
+    req.pipe(jsonStream).pipe(transform).pipe(res)
+  }
+
+  /**
+   * @param {Request} req
+   * @param {Response} res
+   */
+  updateMany (req, res) {
+    const transform = new ObjTransform({ res, fn: this.update.bind(this) })
+    res.setHeader(CONTENT_TYPE, MIME_JSON)
+    res.setHeader(X_REQUEST_ID, req.id || UNDEF_REQ_ID)
+    const jsonStream = JsonStream.parse('.*')
+    jsonStream.on('error', () => {
+      res.end(manyError(new HttpError(400, 'Invalid JSON'), res))
+    })
+    req.pipe(jsonStream).pipe(transform).pipe(res)
+  }
+
+  async deleteMany (body) {
+    const { errors, filter } = this._searchSchema.validate(body)
+    if (errors || !Object.keys(filter || {}).length) {
+      // @ts-expect-error
+      throw new HttpError(400, 'validation error', { info: errors })
+    }
+    log.debug('deleteMany %j', filter)
+    const data = await this._adapter.deleteMany(filter)
+    return data
+  }
+}
+
+const UNDEF_REQ_ID = '00000000-0000-0000-0000-000000000000'
+const CONTENT_TYPE = 'content-type'
+const MIME_JSON = 'application/json; charset=utf-8'
+const X_REQUEST_ID = 'x-request-id'
+
+class ObjTransform extends Transform {
+  constructor ({ res, fn }) {
+    super({ objectMode: true })
+    this.res = res
+    this.fn = fn
+    this.cnt = 0
+  }
+
+  async _transform (chunk, encoding, callback) {
+    const { cnt, res, fn } = this
+    if (cnt === 0) {
+      if (typeof chunk !== 'object') {
+        res.write(manyError(new HttpError(400, 'No documents'), res))
+        this.push(null)
+        callback()
+        return
+      }
+      this.push('[')
+    } else {
+      this.push(', ')
+    }
+    if (typeof chunk !== 'object') {
+      this.push(manyError(new HttpError(400, 'No document')))
+      callback()
+      return
+    }
+    this.cnt++
+    try {
+      const result = await fn(chunk)
+      this.push(JSON.stringify(result))
+    } catch (/** @type {Error|any} */ err) {
+      this.push(manyError(err))
+    }
+    callback()
+  }
+
+  _flush () {
+    const { cnt, res } = this
+    if (cnt) {
+      this.push(']')
+    } else {
+      res.write(manyError(new HttpError(400, 'No documents'), res))
+    }
+    this.push(null)
+  }
+}
+
+/**
+ * @param {HttpError} err
+ * @param {import('node:http').ServerResponse} [res]
+ * @returns {string}
+ */
+function manyError (err, res) {
+  const status = err.status || 500
+  const message = err.status ? err.message : 'General Error'
+  const errors = err.info
+  if (res) res.statusCode = status
+  log[status < 500 ? 'warn' : 'error'](err)
+  return JSON.stringify({ status, message, errors })
 }

@@ -57,9 +57,23 @@ export class Adapter {
     /**
      * delete document from database
      * @param {string} id
-     * @returns {Promise<object>} deleted stats
+     * @returns {Promise<{
+     *  deletedCount: number
+     * }>} deleted stats
      */
-    deleteById(id: string): Promise<object>;
+    deleteById(id: string): Promise<{
+        deletedCount: number;
+    }>;
+    /**
+     * delete many documents in database
+     * @param {object} filter filter Rules for items
+     * @returns {Promise<{
+     *  deletedCount: number
+     * }>} deleted stats
+     */
+    deleteMany(filter: object): Promise<{
+        deletedCount: number;
+    }>;
     /**
      * delete all documents with deletedAt timestamp older than date
      * @param {Date} [date] defaults to Date.now() - 30d

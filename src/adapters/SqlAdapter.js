@@ -149,7 +149,7 @@ export class SqlAdapter extends Adapter {
       where
     }
     // console.dir(findFilter, { depth: null })
-    log.debug(findFilter)
+    log.debug('findMany %j', findFilter)
     const results = await this._model.findAll(findFilter)
     const obj = {
       data: toArray(results)
@@ -162,6 +162,31 @@ export class SqlAdapter extends Adapter {
 
   async deleteById (id) {
     const where = { id, deletedAt: null }
+    const result = this.instantDeletion
+      ? await this._model.destroy({ where })
+      : (await this._model.update({ deletedAt: new Date() }, { where }))?.[0]
+
+    if (!result) {
+      throw new HttpError(404)
+    }
+    return {
+      deletedCount: result
+    }
+  }
+
+  /**
+   * @param {object} filter filter Rules for items
+   * @returns {Promise<{
+   *  deletedCount: number
+   * }>}
+   */
+  async deleteMany (filter) {
+    const where = {
+      ...convertFilterRule(filter),
+      deletedAt: null
+    }
+    log.debug('deleteMany %j', where)
+
     const result = this.instantDeletion
       ? await this._model.destroy({ where })
       : (await this._model.update({ deletedAt: new Date() }, { where }))?.[0]
