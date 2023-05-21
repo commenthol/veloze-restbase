@@ -3,12 +3,12 @@
 > Rest-API to database using JSON-schema
 
 In software development we often repeat ourselves when it comes to persisting
-data. Usually you may just store data records according to a model (and its
-schema) which do not necessarily relate to another model.
+data. Usually you may just want to store data records according to a model (and
+its schema), which does not necessarily relate to another model.
 
-Here this project may help you to define a RESTful Router based on a provided
+This project may help you to define a RESTful Router based on a provided
 JSON-schema. Such schema needs to be "flat" such that data can be persisted and
-queried from relational databases.
+queried from relational databases also.
 
 It implements the common RESTful endpoints for persisting and querying documents
 based on the documents JSON-schema:
@@ -19,6 +19,12 @@ based on the documents JSON-schema:
 - complex find: `SEARCH /{modelName}` or `POST /{modelName}/search`
 - **U**pdate: `PUT /{modelName}/:id`
 - **D**elete: `DELETE /{modelName}/:id`
+
+as well as bulk operations on many documents:
+
+- **C**reate many: `POST /{modelName}/create`
+- **U**pdate many: `PUT /{modelName}`
+- **D**elete many: `POST /{modelName}/delete`
 
 Provides database adapters for:
 
@@ -92,7 +98,7 @@ git clone https://github.com/commenthol/veloze-restbase
 # install dependencies
 npm i
 # start mongodb (needs docker, docker-compose)
-npm run dcup -- mongodb
+npm run dc:up -- mongodb
 # start the server
 node examples/index.js
 # make some noise
