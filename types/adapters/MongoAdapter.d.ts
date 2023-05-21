@@ -1,24 +1,4 @@
 /**
- * @typedef {import('../types').Index} Index
- */ /**
-* @typedef {object} MongoInitOptions
-* @property {import('mongodb/mongodb').MongoClient} [client]
-* @property {Index} [indexes]
-*/ /**
-* @typedef {import('./Adapter').AdapterOptions} AdapterOptions
-*/ /**
-* @typedef {object} MongoAdapterOptionsExt
-* @property {string} database database name
-*/ /**
-* @typedef {AdapterOptions & MongoAdapterOptionsExt & MongoInitOptions} MongoAdapterOptions
-*/ /**
-* @typedef {object} MongoClientUri
-* @property {string} uri
-* @property {string} database
-* @property {object[]} index MongoDb Database Index https://www.mongodb.com/basics/database-index
-* @property {function} randomUuid random id generation function
-*/
-/**
  * @see https://www.mongodb.com/docs/drivers/node/current/usage-examples/
  */
 export class MongoAdapter extends Adapter {

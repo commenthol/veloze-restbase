@@ -26,6 +26,7 @@ const {
 } = process.env
 
 const UNDEF_REQ_ID = '00000000-0000-0000-0000-000000000000'
+const MAX_BULK_INSERTS = 1e3
 
 function testSet (options) {
   const cache = {}
@@ -545,6 +546,25 @@ function testSet (options) {
             store.create = body.filter(item => !item.status).map(({ item, id, version }) => ({ item, id, version }))
           })
       })
+
+      it('shall create 1000 documents', function () {
+        this.timeout(3e3)
+        const payload = []
+        const max = MAX_BULK_INSERTS
+        for (let i = 0; i < max; i++) {
+          payload.push({ item: `many${i}`, quantity: i })
+        }
+        const start = Date.now()
+        return supertest(options.router.handle)
+          .post('/items/create')
+          .type('json')
+          .send(payload)
+          .expect(200)
+          .then(() => {
+            const diff = Date.now() - start
+            console.log('%s inserts per second', (max * 1000 / diff).toFixed(2))
+          })
+      })
     })
 
     describe('PUT /items', function () {
@@ -625,12 +645,11 @@ function testSet (options) {
           .expect(400)
       })
 
-      it('shall delete all items by id', function () {
+      it('shall delete items by id', function () {
         assert.ok(store.create, 'need result from create test')
         const payload = {
           id: store.create.map(doc => doc.id)
         }
-        console.log(payload)
         return supertest(options.router.handle)
           .post('/items/delete')
           .type('json')
@@ -642,13 +661,28 @@ function testSet (options) {
             assert.deepEqual(body, { deletedCount: 3 })
           })
       })
+
+      it('shall delete 1000 documents', function () {
+        this.timeout(3e3)
+        const max = MAX_BULK_INSERTS
+        const start = Date.now()
+        return supertest(options.router.handle)
+          .post('/items/delete')
+          .type('json')
+          .send({ item: { $starts: 'many' } })
+          .expect(200)
+          .then(() => {
+            const diff = Date.now() - start
+            console.log('%s deletes per second', (max * 1000 / diff).toFixed(2))
+          })
+      })
     })
   })
 }
 
 describe('modelRouter', function () {
   describe('MongoAdapter', function () {
-    describe.skip('MongoAdapter optimisticLocking=true', function () {
+    describe('MongoAdapter optimisticLocking=true', function () {
       const options = {}
 
       before(async function () {
@@ -734,7 +768,7 @@ describe('modelRouter', function () {
     })
   })
 
-  describe.skip('SqlAdapter', function () {
+  describe('SqlAdapter', function () {
     const database = 'test'
 
     before(async function () {

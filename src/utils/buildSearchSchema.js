@@ -10,7 +10,7 @@ import {
 import { getOperatorTypes } from './query.js'
 import { logger } from './logger.js'
 
-const log = logger('utils:buildSearchSchema')
+let log
 
 /**
  * @typedef {import('../Schema.js').Schema} Schema
@@ -29,6 +29,8 @@ const log = logger('utils:buildSearchSchema')
  */
 export const buildSearchSchema = (options) => {
   const { modelSchema, maxItems = MAX_ITEMS } = options
+
+  log = log || logger('utils:buildSearchSchema')
 
   /** @type {string[]|[]} */
   const fieldNames = []

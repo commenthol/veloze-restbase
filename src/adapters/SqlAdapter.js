@@ -12,7 +12,7 @@ import { DAY } from '../constants.js'
 const MIN_SAFE_INTEGER = -2147483647 // (1 << 31)
 const MAX_SAFE_INTEGER = 2147483647 // ~(1 << 31)
 
-const log = logger('SqlAdapter')
+let log
 
 const isNumber = (num) => num !== undefined && !isNaN(Number(num))
 const isSafeInt = (num) =>
@@ -49,6 +49,8 @@ export class SqlAdapter extends Adapter {
       client,
       indexes
     } = options
+
+    log = log || logger('SqlAdapter')
 
     super({ modelName, jsonSchema, optimisticLocking, instantDeletion })
     if (client) {

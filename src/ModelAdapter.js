@@ -15,7 +15,7 @@ import JsonStream from '@search-dump/jsonstream'
  * @property {number} [limit=100]
  */
 
-const log = logger('ModelAdapter')
+let log
 
 export class ModelAdapter {
   /**
@@ -27,6 +27,8 @@ export class ModelAdapter {
       randomUuid = nanoid,
       limit = LIMIT
     } = options || {}
+
+    log = log || logger('ModelAdapter')
 
     this._adapter = adapter
     this._schema = adapter.schema
@@ -172,6 +174,7 @@ export class ModelAdapter {
     return this._adapter.deleteDeleted(date)
   }
 
+  // TODO: limit body size
   /**
    * @param {Request} req
    * @param {Response} res
@@ -187,6 +190,7 @@ export class ModelAdapter {
     req.pipe(jsonStream).pipe(transform).pipe(res)
   }
 
+  // TODO: limit body size
   /**
    * @param {Request} req
    * @param {Response} res

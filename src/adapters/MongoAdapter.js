@@ -3,8 +3,6 @@ import { HttpError } from 'veloze'
 import { escapeRegExp, logger } from '../utils/index.js'
 import { DAY } from '../constants.js'
 
-const log = logger('MongoAdapter')
-
 /**
  * @typedef {import('../types').Index} Index
  *//**
@@ -26,6 +24,8 @@ const log = logger('MongoAdapter')
  * @property {function} randomUuid random id generation function
  */
 
+let log
+
 /**
  * @see https://www.mongodb.com/docs/drivers/node/current/usage-examples/
  */
@@ -43,6 +43,8 @@ export class MongoAdapter extends Adapter {
       client,
       indexes
     } = options
+
+    log = log || logger('MongoAdapter')
 
     if (!database) {
       throw new Error('need database')
