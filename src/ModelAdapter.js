@@ -16,6 +16,9 @@ import JsonStream from '@search-dump/jsonstream'
  */
 
 let log
+logger.register((_logger) => {
+  log = _logger('ModelAdapter')
+})
 
 export class ModelAdapter {
   /**
@@ -27,8 +30,6 @@ export class ModelAdapter {
       randomUuid = nanoid,
       limit = LIMIT
     } = options || {}
-
-    log = log || logger('ModelAdapter')
 
     this._adapter = adapter
     this._schema = adapter.schema

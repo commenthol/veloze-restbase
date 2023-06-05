@@ -4,6 +4,9 @@ import ajvFormats from 'ajv-formats'
 import { logger } from './utils/index.js'
 
 let log
+logger.register((_logger) => {
+  log = _logger('schema')
+})
 
 /**
  * @typedef {import('ajv').ErrorObject} ErrorObject
@@ -23,8 +26,6 @@ export class Schema {
     const {
       ...ajvOpts
     } = options || {}
-
-    log = log || logger('schema')
 
     const ajv = new Ajv2020({
       strict: true,

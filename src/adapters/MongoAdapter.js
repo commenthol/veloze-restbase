@@ -25,6 +25,9 @@ import { DAY } from '../constants.js'
  */
 
 let log
+logger.register((_logger) => {
+  log = _logger('MongoAdapter')
+})
 
 /**
  * @see https://www.mongodb.com/docs/drivers/node/current/usage-examples/
@@ -43,8 +46,6 @@ export class MongoAdapter extends Adapter {
       client,
       indexes
     } = options
-
-    log = log || logger('MongoAdapter')
 
     if (!database) {
       throw new Error('need database')

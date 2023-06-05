@@ -1,25 +1,43 @@
-import { logger as loggerFn } from 'debug-level'
+import { EventEmitter } from 'node:events'
+import { logger as loggerF } from 'debug-level'
 
 /**
  * @typedef {import('debug-level/types/LogBase').LogBase} LogBase
  * @typedef {import('debug-level/types/node').LogOptions} LogOptions
  * @typedef {(namespace: string, opts?: LogOptions | undefined) => LogBase} LoggerFn
+ * @typedef {(namespace: string, options?: LogOptions) => LogBase} LogFn
  */
-
-let loggerF = loggerFn
 
 /**
- * overwrite logger function
- * @param {LoggerFn} loggerFn
+ * @example
+ * let log
+ * logger.register(_logger => {
+ *   log = _logger('namespace')
+ * })
  */
-export const setLoggerFn = (loggerFn) => {
-  loggerF = loggerFn
+class Logger extends EventEmitter {
+  constructor () {
+    super()
+    this.logger = (namespace, opts) => loggerF(`veloze-restbase:${namespace || ''}`, opts)
+  }
+
+  /**
+   * @param {(...args: any[]) => void} listener
+   */
+  register (listener) {
+    super.on('log', listener)
+    listener(this.logger)
+    return this
+  }
+
+  /**
+   * change logger function
+   * @param {LogFn} fn
+   */
+  change (fn) {
+    this.logger = fn
+    this.emit('log', fn)
+  }
 }
 
-/**
- * @param {string} [namespace]
- * @param {import('debug-level/types/node').LogOptions} [opts]
- * @returns {LogBase}
- */
-export const logger = (namespace, opts) =>
-  loggerF(`veloze-restbase:${namespace || ''}`, opts)
+export const logger = new Logger()
