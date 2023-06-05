@@ -493,6 +493,7 @@ function testSet (options) {
           .post('/items/create')
           .type('json')
           .expect(400, { status: 400, message: 'No documents' })
+          // .then(({ body, headers, status }) => console.log({ body, headers, status }))
       })
 
       it('shall fail due to bad JSON', function () {
@@ -500,7 +501,7 @@ function testSet (options) {
           .post('/items/create')
           .type('json')
           .send('{ item: "foo"')
-          .expect(400, { status: 400, message: 'Invalid JSON' })
+          .expect(400, { status: 400, message: 'Invalid JSON (Unexpected "i" at position 3 in state STOP)' })
       })
 
       it('shall fail to create multiple documents if no array of documents is send', function () {

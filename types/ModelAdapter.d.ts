@@ -22,6 +22,7 @@ export class ModelAdapter {
         };
     };
     _randomUuid: Function;
+    _bodyLimit: number;
     get modelName(): string;
     get model(): any;
     /**
@@ -88,5 +89,12 @@ export type ModelAdapterOptions = {
      * A random UUID function which shall guarantee a strong order on time. This is required to guarantee the order of records on querying. Do not use a function like UUIDv4 unless you ensure this ordering by other means, e.g. use createdAt timestamp together with an index. Consider the use of the provided `uuid7()` method. Defaults to `nanoid()` which gives a 24 char long time based randomized id.
      */
     randomUuid?: Function | undefined;
+    /**
+     * pagination limit
+     */
     limit?: number | undefined;
+    /**
+     * max body limit for bulk create and update operations
+     */
+    bodyLimit?: number | undefined;
 };

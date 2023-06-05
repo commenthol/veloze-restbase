@@ -1,7 +1,7 @@
 import { HttpError } from 'veloze'
 import { logger, nanoid, querySchema, searchSchema } from './utils/index.js'
-import { LIMIT } from './constants.js'
-import { Transform } from 'node:stream'
+import { LIMIT, MAX_BODY_LIMIT } from './constants.js'
+import { ObjTransform, BodyLimit, manyError } from './utils/streams.js'
 import JsonStream from '@search-dump/jsonstream'
 
 /**
@@ -12,8 +12,14 @@ import JsonStream from '@search-dump/jsonstream'
  *
  * @typedef {object} ModelAdapterOptions
  * @property {Function} [randomUuid] A random UUID function which shall guarantee a strong order on time. This is required to guarantee the order of records on querying. Do not use a function like UUIDv4 unless you ensure this ordering by other means, e.g. use createdAt timestamp together with an index. Consider the use of the provided `uuid7()` method. Defaults to `nanoid()` which gives a 24 char long time based randomized id.
- * @property {number} [limit=100]
+ * @property {number} [limit=LIMIT] pagination limit
+ * @property {number} [bodyLimit=10e6] max body limit for bulk create and update operations
  */
+
+const UNDEF_REQ_ID = '00000000-0000-0000-0000-000000000000'
+const CONTENT_TYPE = 'content-type'
+const MIME_JSON = 'application/json; charset=utf-8'
+const X_REQUEST_ID = 'x-request-id'
 
 let log
 logger.register((_logger) => {
@@ -28,6 +34,7 @@ export class ModelAdapter {
   constructor (adapter, options) {
     const {
       randomUuid = nanoid,
+      bodyLimit = MAX_BODY_LIMIT,
       limit = LIMIT
     } = options || {}
 
@@ -36,6 +43,7 @@ export class ModelAdapter {
     this._querySchema = querySchema({ modelSchema: adapter.schema, limit })
     this._searchSchema = searchSchema({ modelSchema: adapter.schema, limit })
     this._randomUuid = randomUuid
+    this._bodyLimit = bodyLimit
   }
 
   get modelName () {
@@ -175,36 +183,67 @@ export class ModelAdapter {
     return this._adapter.deleteDeleted(date)
   }
 
-  // TODO: limit body size
   /**
    * @param {Request} req
    * @param {Response} res
    */
   createMany (req, res) {
-    const transform = new ObjTransform({ res, fn: this.create.bind(this) })
+    const handleErr = (httpErr) => {
+      let body = manyError(httpErr, res)
+      if (res.headersSent) {
+        body += ']'
+      }
+      res.end(body)
+    }
+
     res.setHeader(CONTENT_TYPE, MIME_JSON)
     res.setHeader(X_REQUEST_ID, req.id || UNDEF_REQ_ID)
-    const jsonStream = JsonStream.parse('.*')
-    jsonStream.on('error', () => {
-      res.end(manyError(new HttpError(400, 'Invalid JSON'), res))
-    })
-    req.pipe(jsonStream).pipe(transform).pipe(res)
+
+    req
+      .pipe(new BodyLimit({ limit: this._bodyLimit }))
+      .on('error', handleErr)
+      .pipe(JsonStream.parse('.*'))
+      .on('error', (err) => {
+        if (err.message.startsWith('Invalid JSON')) {
+          err = new HttpError(400, err.message)
+        }
+        handleErr(err)
+      })
+      .pipe(new ObjTransform({ fn: this.create.bind(this) }))
+      .on('error', handleErr)
+      .pipe(res)
+      .on('error', handleErr)
   }
 
-  // TODO: limit body size
   /**
    * @param {Request} req
    * @param {Response} res
    */
   updateMany (req, res) {
-    const transform = new ObjTransform({ res, fn: this.update.bind(this) })
+    const handleErr = (httpErr) => {
+      let body = manyError(httpErr, res)
+      if (res.headersSent) {
+        body += ']'
+      }
+      res.end(body)
+    }
+
     res.setHeader(CONTENT_TYPE, MIME_JSON)
     res.setHeader(X_REQUEST_ID, req.id || UNDEF_REQ_ID)
-    const jsonStream = JsonStream.parse('.*')
-    jsonStream.on('error', () => {
-      res.end(manyError(new HttpError(400, 'Invalid JSON'), res))
-    })
-    req.pipe(jsonStream).pipe(transform).pipe(res)
+
+    req
+      .pipe(new BodyLimit({ limit: this._bodyLimit }))
+      .on('error', handleErr)
+      .pipe(JsonStream.parse('.*'))
+      .on('error', (err) => {
+        if (err.message.startsWith('Invalid JSON')) {
+          err = new HttpError(400, err.message)
+        }
+        handleErr(err)
+      })
+      .pipe(new ObjTransform({ fn: this.update.bind(this) }))
+      .on('error', handleErr)
+      .pipe(res)
   }
 
   async deleteMany (body) {
@@ -217,70 +256,4 @@ export class ModelAdapter {
     const data = await this._adapter.deleteMany(filter)
     return data
   }
-}
-
-const UNDEF_REQ_ID = '00000000-0000-0000-0000-000000000000'
-const CONTENT_TYPE = 'content-type'
-const MIME_JSON = 'application/json; charset=utf-8'
-const X_REQUEST_ID = 'x-request-id'
-
-class ObjTransform extends Transform {
-  constructor ({ res, fn }) {
-    super({ objectMode: true })
-    this.res = res
-    this.fn = fn
-    this.cnt = 0
-  }
-
-  async _transform (chunk, encoding, callback) {
-    const { cnt, res, fn } = this
-    if (cnt === 0) {
-      if (typeof chunk !== 'object') {
-        res.write(manyError(new HttpError(400, 'No documents'), res))
-        this.push(null)
-        callback()
-        return
-      }
-      this.push('[')
-    } else {
-      this.push(', ')
-    }
-    if (typeof chunk !== 'object') {
-      this.push(manyError(new HttpError(400, 'No document')))
-      callback()
-      return
-    }
-    this.cnt++
-    try {
-      const result = await fn(chunk)
-      this.push(JSON.stringify(result))
-    } catch (/** @type {Error|any} */ err) {
-      this.push(manyError(err))
-    }
-    callback()
-  }
-
-  _flush () {
-    const { cnt, res } = this
-    if (cnt) {
-      this.push(']')
-    } else {
-      res.write(manyError(new HttpError(400, 'No documents'), res))
-    }
-    this.push(null)
-  }
-}
-
-/**
- * @param {HttpError} err
- * @param {import('node:http').ServerResponse} [res]
- * @returns {string}
- */
-function manyError (err, res) {
-  const status = err.status || 500
-  const message = err.status ? err.message : 'General Error'
-  const errors = err.info
-  if (res) res.statusCode = status
-  log[status < 500 ? 'warn' : 'error'](err)
-  return JSON.stringify({ status, message, errors })
 }
