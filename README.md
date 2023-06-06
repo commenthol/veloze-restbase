@@ -41,15 +41,15 @@ Please referrer to the documentation in `docs/index.md`.
 
 # Usage
 
+```sh
+pnpm i @veloze/restbase
+```
+
 ```js
-import dotenv from "dotenv";
 import { Server } from "veloze";
-
 import { MongoClient } from "mongodb";
-import { modelRouter, MongoAdapter } from "../src/index.js";
+import { modelRouter, MongoAdapter } from "@veloze/restbase";
 
-// let's read env vars from a .env file
-dotenv.config();
 const {
   HTTP_PORT = 3000,
   MONGODB_URL = "mongodb://root:example@127.0.0.1:27017",
@@ -74,7 +74,7 @@ const adapter = new MongoAdapter({
   instantDeletion: false,  // disables instant deletion of documents
   jsonSchema,
 });
-// 3. create the rest-router
+// 3. create the rest-router by passing the adapter
 const itemsRouter = modelRouter({ adapter });
 // 4. create a Server
 const server = new Server({ onlyHTTP1: true });
@@ -82,12 +82,6 @@ const server = new Server({ onlyHTTP1: true });
 server.use("/items", itemsRouter.handle);
 // 6. start up the server
 server.listen(HTTP_PORT);
-console.info("server started %j", server.address());
-
-process.on("SIGHUP", () => {
-  // 7. don't forget to close the db-connection
-  client.close();
-});
 ```
 
 Run the example:
