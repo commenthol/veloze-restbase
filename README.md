@@ -1,3 +1,6 @@
+[![npm-badge][npm-badge]][npm]
+![types-badge][types-badge]
+
 # @veloze/restbase
 
 > Rest-API to database using JSON-schema
@@ -102,3 +105,7 @@ node examples/traffic.js
 # License
 
 MIT licensed
+
+[npm-badge]: https://badgen.net/npm/v/@veloze/restbase
+[npm]: https://www.npmjs.com/package/@veloze/restbase
+[types-badge]: https://badgen.net/npm/types/@veloze/restbase
