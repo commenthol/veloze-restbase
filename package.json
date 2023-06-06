@@ -1,6 +1,6 @@
 {
   "name": "@veloze/restbase",
-  "version": "0.0.1-0",
+  "version": "0.1.0-0",
   "description": "Rest-API to database",
   "keywords": [
     "restbase",
