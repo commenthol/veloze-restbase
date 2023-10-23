@@ -2,7 +2,7 @@ version: "3"
 services:
   mariadb:
     # https://hub.docker.com/_/mariadb
-    image: docker.io/library/mariadb:10.11
+    image: docker.io/library/mariadb:11.1
     ports:
       - "3306:3306"
     environment:
@@ -23,7 +23,7 @@ services:
 
   postgres:
     # https://hub.docker.com/_/postgres
-    image: docker.io/library/postgres:alpine3.18
+    image: docker.io/library/postgres:16-alpine
     ports:
       - "5432:5432"
     environment:
@@ -32,7 +32,7 @@ services:
 
   mongodb:
     # https://hub.docker.com/_/mongo
-    image: docker.io/library/mongo:6.0
+    image: docker.io/library/mongo:7.0
     ports:
       - "27017:27017"
     environment:
