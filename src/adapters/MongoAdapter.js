@@ -8,7 +8,7 @@ import { DAY } from '../constants.js'
  *//**
  * @typedef {object} MongoInitOptions
  * @property {import('mongodb/mongodb').MongoClient} [client]
- * @property {Index} [indexes]
+ * @property {Index[]} [indexes]
  *//**
  * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
  *//**
@@ -141,7 +141,6 @@ export class MongoAdapter extends Adapter {
       deletedAt: { $exists: false }
     }
     const _findOptions = convertFindOptions(findOptions)
-    // console.dir(_filter, { depth: null })
     log.debug(_filter, _findOptions)
     const cursor = await this._model.find(_filter, _findOptions)
     const obj = {}

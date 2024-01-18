@@ -3,7 +3,7 @@
  */ /**
 * @typedef {object} SqlInitOptions
 * @property {import('sequelize').Sequelize} client
-* @property {Index} [indexes]
+* @property {Index[]} [indexes]
 */ /**
 * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
 */ /**
@@ -47,7 +47,7 @@ export type Schema = import('../Schema.js').Schema;
 export type Index = import('../types').Index;
 export type SqlInitOptions = {
     client: import('sequelize').Sequelize;
-    indexes?: import("../types").Index | undefined;
+    indexes?: import("../types").Index[] | undefined;
 };
 export type AdapterOptions = import('./Adapter').AdapterOptions;
 export type SqlAdapterOptionsExt = {

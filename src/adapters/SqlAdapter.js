@@ -26,7 +26,7 @@ const isSafeInt = (num) =>
  *//**
  * @typedef {object} SqlInitOptions
  * @property {import('sequelize').Sequelize} client
- * @property {Index} [indexes]
+ * @property {Index[]} [indexes]
  *//**
  * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
  *//**

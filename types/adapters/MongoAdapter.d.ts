@@ -29,7 +29,7 @@ export namespace MongoAdapter {
 export type Index = import('../types').Index;
 export type MongoInitOptions = {
     client?: import("mongodb").MongoClient | undefined;
-    indexes?: import("../types").Index | undefined;
+    indexes?: import("../types").Index[] | undefined;
 };
 export type AdapterOptions = import('./Adapter').AdapterOptions;
 export type MongoAdapterOptionsExt = {
