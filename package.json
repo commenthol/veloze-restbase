@@ -69,6 +69,7 @@
     "pg": "^8.11.3",
     "rimraf": "^5.0.5",
     "shelljs": "^0.8.5",
+    "sqlite3": "^5.1.7",
     "supertest": "^6.3.4",
     "typescript": "^5.3.3"
   },
