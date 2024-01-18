@@ -20,6 +20,7 @@ export class SqlAdapter extends Adapter {
      * @param {SqlAdapterOptions} options
      */
     constructor(options: SqlAdapterOptions);
+    _indexes: import("../types").Index[] | undefined;
     adapterType: string;
     /**
      * @param {SqlInitOptions} options

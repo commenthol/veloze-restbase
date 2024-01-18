@@ -54,6 +54,7 @@ export class MongoAdapter extends Adapter {
 
     this.adapterType = 'mongo'
     this._database = database
+    this._indexes = indexes
     if (client) {
       this.init({ client, indexes }).catch(err => log.error(err))
     }
@@ -63,7 +64,8 @@ export class MongoAdapter extends Adapter {
    * @param {MongoInitOptions} options
    */
   async init (options) {
-    const { client, indexes = [] } = options
+    const { client, indexes: __indexes } = options
+    const indexes = __indexes || this._indexes || []
     // @ts-expect-error
     this._model = client.db(this._database).collection(this.modelName)
     // always create index on id and version

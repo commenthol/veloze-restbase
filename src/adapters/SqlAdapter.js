@@ -54,6 +54,7 @@ export class SqlAdapter extends Adapter {
     } = options
 
     super({ modelName, jsonSchema, optimisticLocking, instantDeletion })
+    this._indexes = indexes
     if (client) {
       this.init({ client, indexes }).catch(err => log.error(err))
     }
@@ -64,7 +65,8 @@ export class SqlAdapter extends Adapter {
    * @param {SqlInitOptions} options
    */
   async init (options) {
-    const { client, indexes = [] } = options
+    const { client, indexes: __indexes } = options
+    const indexes = __indexes || this._indexes || []
     await client.authenticate()
 
     const _schema = merge.all([
@@ -130,7 +132,7 @@ export class SqlAdapter extends Adapter {
     } else if (result[0] !== 1) {
       throw new HttpError(409)
     }
-    return _doc
+    return { id, ..._doc }
   }
 
   async findById (id) {

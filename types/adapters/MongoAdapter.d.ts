@@ -8,6 +8,7 @@ export class MongoAdapter extends Adapter {
     constructor(options: MongoAdapterOptions);
     adapterType: string;
     _database: string;
+    _indexes: import("../types").Index[] | undefined;
     /**
      * @param {MongoInitOptions} options
      */
