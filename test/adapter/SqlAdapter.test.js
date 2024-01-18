@@ -581,4 +581,44 @@ describe('adapters/SqlAdapter', function () {
       )
     })
   })
+
+  describe('SqlAdapter', function () {
+    it('needs modelName', function () {
+      assert.throws(
+        () => {
+          // eslint-disable-next-line no-new
+          new SqlAdapter({})
+        },
+        (e) => e.message === 'need modelName'
+      )
+    })
+
+    it('need jsonSchema', function () {
+      assert.throws(
+        () => {
+          // eslint-disable-next-line no-new
+          new SqlAdapter({ modelName: 'test' })
+        },
+        (e) => e.message === 'need jsonSchema'
+      )
+    })
+
+    ;['id', 'version'].forEach((prop) => {
+      it(`disallowes ${prop} in jsonSchema`, function () {
+        const jsonSchema = {
+          type: 'object',
+          properties: {
+            [prop]: { type: 'string' }
+          }
+        }
+        assert.throws(
+          () => {
+          // eslint-disable-next-line no-new
+            new SqlAdapter({ modelName: 'test', jsonSchema })
+          },
+          (e) => e.message === `jsonSchema property "${prop}" is not allowed`
+        )
+      })
+    })
+  })
 })

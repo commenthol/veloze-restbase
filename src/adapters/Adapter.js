@@ -66,8 +66,13 @@ export class Adapter {
     if (!jsonSchema || typeof jsonSchema !== 'object') {
       throw new Error('need jsonSchema')
     }
+    for (const prop of Object.keys(DEFAULT_SCHEMA.properties)) {
+      if (jsonSchema.properties[prop]) {
+        throw new Error(`jsonSchema property "${prop}" is not allowed`)
+      }
+    }
 
-    this._model = null
+    this._model = undefined
     this._modelName = modelName
     this._schema = new Schema(merge.all([DEFAULT_SCHEMA, jsonSchema]))
     this._optimisticLocking = optimisticLocking
