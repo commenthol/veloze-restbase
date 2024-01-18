@@ -40,7 +40,7 @@ requires a separate cleanup job).
 
 Works also with express like routers.
 
-Please referrer to the documentation in `docs/index.md`.
+Please refer to the documentation in [docs/index.md](./docs/index.md).
 
 # Usage
 
@@ -94,10 +94,24 @@ Run the example:
 git clone https://github.com/commenthol/veloze-restbase
 # install dependencies
 npm i
+```
+
+with mongodb
+```sh
 # start mongodb (needs docker, docker-compose)
 npm run dc:up -- mongodb
 # start the server
 node examples/index.js
+# make some noise
+node examples/traffic.js
+```
+
+with postgres
+```sh
+# start postgres (needs docker, docker-compose)
+npm run dc:up -- postgres
+# start the server
+node examples/express.js
 # make some noise
 node examples/traffic.js
 ```
