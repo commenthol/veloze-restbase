@@ -70,12 +70,15 @@ export class ModelAdapter {
     }
 
     const createdAtDate = new Date()
-    // need ISO string for validation!
-    doc.updatedAt = createdAtDate.toISOString()
-    doc.id = this._randomUuid()
-    doc.version = 1
+    const _doc = {
+      ...doc,
+      // need ISO string for validation!
+      updatedAt: createdAtDate.toISOString(),
+      id: this._randomUuid(),
+      version: 1
+    }
 
-    const { errors, validated } = this._schema.validate(doc)
+    const { errors, validated } = this._schema.validate(_doc)
     log.debug({ create: true, errors, validated })
     if (errors) {
       throw new HttpError(400, 'validation error', { info: errors })
@@ -101,9 +104,12 @@ export class ModelAdapter {
     if (!doc.id) {
       throw new HttpError(400, 'need id parameter')
     }
-
-    Reflect.deleteProperty(doc, 'createdAt')
-    const { errors, validated } = this._schema.validate(doc)
+    const { createdAt, ..._doc } = doc
+    if (_doc.updatedAt instanceof Date) {
+      // schema validation does not work with dates
+      _doc.updatedAt = _doc.updatedAt.toISOString()
+    }
+    const { errors, validated } = this._schema.validate(_doc)
     log.debug({ update: true, errors, validated })
     if (errors) {
       throw new HttpError(400, 'validation error', { info: errors })
