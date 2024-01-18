@@ -1,3 +1,22 @@
+# 0.1.1 (2024-01-18)
+
+### fix:
+
+- throw if default schema props are used in schema (#6857aac)
+- pass indexes (#afd1ed2)
+- do not mutate documents on create or update (#57a1e86)
+- Index type (#608e11f)
+
+### docs:
+
+- add link to docs (#5b19840)
+- sqlite3 example (#8a10885)
+- badges (#8a60adf)
+
+### chore:
+
+- bump dependencies (#70b7d05)
+
 # 0.1.0 (2023-06-06)
 
 ### feat:
