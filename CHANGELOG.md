@@ -1,3 +1,9 @@
+# 0.2.0 (2024-01-21)
+
+### BREAKING CHANGE:
+
+- optimistic locking, change "version" prop to "v" (#371edce)
+
 # 0.1.1 (2024-01-18)
 
 ### fix:
