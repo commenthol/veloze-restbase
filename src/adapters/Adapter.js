@@ -5,7 +5,7 @@ import { Schema } from '../Schema.js'
  * @typedef {object} AdapterOptions
  * @property {string} modelName required name for table
  * @property {object} jsonSchema required json schema for creating table or db schema
- * @property {boolean} [optimisticLocking=true] enable optimistic locking (based on version property)
+ * @property {boolean} [optimisticLocking=true] enable optimistic locking (based on version property `v`)
  * @property {boolean} [instantDeletion=true] if `false` do not delete immediately but set `deletedAt` timestamp
  */
 
@@ -23,13 +23,13 @@ import { Schema } from '../Schema.js'
 const DEFAULT_SCHEMA = {
   required: [
     'id',
-    'version'
+    'v'
   ],
   properties: {
     id: {
       type: 'string'
     },
-    version: {
+    v: {
       type: 'integer',
       default: 1
     },

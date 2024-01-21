@@ -79,9 +79,9 @@ content-type: application/json
   ```json
   {
     "id": string,
+    "v": integer,
     "updatedAt": string($date-time),
     "createdAt": string($date-time),
-    "version": integer,
     ... // properties according to json-schema, e.g.
     "item": "paper",
     "count": 15
@@ -97,7 +97,7 @@ content-type: application/json
 Update a document.
 
 `updatedAt` timestamp is set to current date-time.  
-`version` number is incremented.
+`v` version number is incremented.
 
 *Example*:
 
@@ -105,8 +105,8 @@ Update a document.
 POST /items 
 {
   "id": "0lgg8pg824co0Z3dHVGDOqDm",
-  "item": "scissor",
-  "version": 1
+  "v": 1,
+  "item": "scissor"
 }
 ```
 
@@ -119,9 +119,9 @@ POST /items
   ```json
   {
     "id": string,
+    "v": integer,
     "updatedAt": string($date-time),
     "createdAt": string($date-time),
-    "version": integer,
     ... // properties according to json-schema, e.g.
     "item": "scissor",
     "count": 15
@@ -171,9 +171,9 @@ Finds documents by its id.
   ```json
   {
     "id": string,
+    "v": integer,
     "updatedAt": string($date-time),
     "createdAt": string($date-time),
-    "version": integer,
     ... // properties according json-schema
   }
   ```
@@ -266,8 +266,8 @@ GET ?article%24starts%24cs=Jacket
 // get the 2nd page for a page which contains 100 documents
 GET ?offset=100&limit=100&countDocs=true
 
-// get back only { id, version, item } properties from the query
-GET ?fields=id,version,item
+// get back only { id, v, item } properties from the query
+GET ?fields=id,v,item
 
 // sort result set by ascending `price` and descending `date`
 GET ?sort=price,date%24desc
@@ -287,9 +287,9 @@ GET ?sort=price,date%24desc
     "data": [         // the found documents
       {
         "id": string,
+        "v": integer,
         "updatedAt": string($date-time),
         "createdAt": string($date-time),
-        "version": integer,
         ... // properties according json-schema
       }
     ]
@@ -409,19 +409,19 @@ content-type: application/json
 [
   {
     "id": "0lhwef7qq99NuNN62BW7NNjQ", 
-    "version": 1,
+    "v": 1,
     "createdAt": Date,
     "item": "paper",
     "count": 0
   }, {
     "id": "0lhwef7qtIrkY37pGJjVY63l", 
-    "version": 1,
+    "v": 1,
     "createdAt": Date,
     "item": "scissor", 
     "count": 1 
   }, {
     "id": "0lhwef7qvk8sI9M1gj33J7fE", 
-    "version": 1,
+    "v": 1,
     "createdAt": Date,
     "item": "stone", 
     "count": 3 
@@ -436,7 +436,7 @@ content-type: application/json
 
 Update multiple documents
 
-To update documents id and version must be present in the document.
+To update documents id and version `v` must be present in the document.
 
 *Example Request*:
 
@@ -446,11 +446,11 @@ content-type: application/json
 [
   {
     "id": "0lhwef7qq99NuNN62BW7NNjQ", 
-    "version": 1,
+    "v": 1,
     "count": 5
   }, {
     "id": "0lhwef7qtIrkY37pGJjVY63l", 
-    "version": 1,
+    "v": 1,
     "item": "scissors", 
   }, {
     "item": "foo"
@@ -470,13 +470,13 @@ content-type: application/json
 [
   {
     "id": "0lhwef7qq99NuNN62BW7NNjQ", 
-    "version": 2,
+    "v": 2,
     "createdAt": Date,
     "item": "paper",
     "count": 5
   }, {
     "id": "0lhwef7qtIrkY37pGJjVY63l", 
-    "version": 2,
+    "v": 2,
     "createdAt": Date,
     "item": "scissors", 
     "count": 1 

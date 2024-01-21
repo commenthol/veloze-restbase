@@ -76,7 +76,7 @@ export class SqlAdapter extends Adapter {
           type: DataTypes.STRING,
           primaryKey: true
         },
-        version: {
+        v: {
           type: DataTypes.INTEGER
         },
         updatedAt: {
@@ -93,7 +93,7 @@ export class SqlAdapter extends Adapter {
     log.debug('schema: %j', _schema)
 
     const _indexes = [
-      { fields: ['version'] },
+      { fields: ['v'] },
       // @ts-ignore
       ...indexes
     ]
@@ -117,14 +117,14 @@ export class SqlAdapter extends Adapter {
   }
 
   async update (doc) {
-    const { id, version, ..._doc } = doc
+    const { id, v, ..._doc } = doc
     const filter = { id, deletedAt: null }
     if (this.optimisticLocking) {
-      filter.version = version
+      filter.v = v
     }
-    // update date-time and version
+    // update date-time and version `v`
     _doc.updatedAt = new Date()
-    _doc.version = version + 1
+    _doc.v = v + 1
 
     const result = await this._model.update(_doc, { where: filter })
     if (!result) {

@@ -48,11 +48,11 @@ const main = async () => {
   }
 
   {
-    const { id, item, version, quantity } = foundItem.data[0]
+    const { id, item, v, quantity } = foundItem.data[0]
     const updated = await update({
       id, // needed
       item, // required
-      version, // needed for optimistic locking
+      v, // needed for optimistic locking
       quantity: Number(quantity) + 42 // our update
     })
     console.log('updated>', updated)

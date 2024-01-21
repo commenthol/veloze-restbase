@@ -75,7 +75,7 @@ export class ModelAdapter {
       // need ISO string for validation!
       updatedAt: createdAtDate.toISOString(),
       id: this._randomUuid(),
-      version: 1
+      v: 1
     }
 
     const { errors, validated } = this._schema.validate(_doc)

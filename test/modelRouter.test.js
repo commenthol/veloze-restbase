@@ -99,11 +99,11 @@ function testSet (options) {
 
     it('shall fail to update item without wrong type', function () {
       assert.ok(cache.doc, 'need cache from previous tests')
-      const { id, version } = cache.doc
+      const { id, v } = cache.doc
       return supertest(options.router.handle)
         .put(`/items/${id}`)
         .type('json')
-        .send({ unit: 100, version })
+        .send({ unit: 100, v })
         .expect(400)
         .then(({ body }) => {
           // console.log(body)
@@ -127,7 +127,7 @@ function testSet (options) {
         .then(({ body }) => {
           // console.log(body)
           assert.equal(body.item, 'paperclip')
-          assert.equal(body.version, 2)
+          assert.equal(body.v, 2)
         })
     })
 
@@ -530,9 +530,9 @@ function testSet (options) {
             assert.equal(typeof headers['x-request-id'], 'string')
             assert.notEqual(headers['x-request-id'], UNDEF_REQ_ID)
             assert.deepEqual(stripIds(body), [
-              { item: 'test-a', version: 1, unit: 'cm' },
-              { item: 'test-b', version: 1, unit: 'cm' },
-              { item: 'test-c', version: 1, unit: 'cm' },
+              { item: 'test-a', v: 1, unit: 'cm' },
+              { item: 'test-b', v: 1, unit: 'cm' },
+              { item: 'test-c', v: 1, unit: 'cm' },
               {
                 status: 400,
                 message: 'validation error',
@@ -544,7 +544,7 @@ function testSet (options) {
                 message: 'No document'
               }
             ])
-            store.create = body.filter(item => !item.status).map(({ item, id, version }) => ({ item, id, version }))
+            store.create = body.filter(item => !item.status).map(({ item, id, v }) => ({ item, id, v }))
           })
       })
 
@@ -604,17 +604,17 @@ function testSet (options) {
               {
                 item: 'test-a1',
                 unit: 'cm',
-                version: 2
+                v: 2
               },
               {
                 item: 'test-b1',
                 unit: 'cm',
-                version: 2
+                v: 2
               },
               {
                 item: 'test-c1',
                 unit: 'cm',
-                version: 2
+                v: 2
               },
               {
                 message: 'need id parameter',

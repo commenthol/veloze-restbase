@@ -73,7 +73,7 @@ const adapter = new MongoAdapter({
   client,
   database: "inventory",
   modelName: "items", // use plural form!!
-  optimisticLocking: true, // enables optimistic locking (by version)
+  optimisticLocking: true, // enables optimistic locking (by version `v`)
   instantDeletion: false,  // disables instant deletion of documents
   jsonSchema,
 });

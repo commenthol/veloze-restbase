@@ -603,7 +603,7 @@ describe('adapters/SqlAdapter', function () {
       )
     })
 
-    ;['id', 'version'].forEach((prop) => {
+    ;['id', 'v'].forEach((prop) => {
       it(`disallowes ${prop} in jsonSchema`, function () {
         const jsonSchema = {
           type: 'object',

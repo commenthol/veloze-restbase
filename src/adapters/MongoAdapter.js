@@ -68,11 +68,11 @@ export class MongoAdapter extends Adapter {
     const indexes = __indexes || this._indexes || []
     // @ts-expect-error
     this._model = client.db(this._database).collection(this.modelName)
-    // always create index on id and version
+    // always create index on `id` and `v` version
 
     const _indexes = [
       { fields: ['id'], unique: true },
-      { fields: ['version'] },
+      { fields: ['v'] },
       // @ts-ignore
       ...indexes
     ]
@@ -101,14 +101,14 @@ export class MongoAdapter extends Adapter {
   }
 
   async update (doc) {
-    const { id, updatedAt, version, ..._doc } = doc
+    const { id, updatedAt, v, ..._doc } = doc
     const filter = { id, deletedAt: { $exists: false } }
     if (this.optimisticLocking) {
-      filter.version = version
+      filter.v = v
     }
-    // update date-time and version
+    // update date-time and version `v`
     _doc.updatedAt = new Date()
-    _doc.version = version + 1
+    _doc.v = v + 1
 
     const result = await this._model.updateOne(filter, { $set: _doc })
     if (!result?.acknowledged) {

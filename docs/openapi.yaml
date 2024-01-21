@@ -93,8 +93,8 @@ paths:
         // get the 2nd page for a page which contains 100 documents
         GET ?offset=100&limit=100&countDocs=true
 
-        // get back only { id, version, item } properties from the query
-        GET ?fields=id,version,item
+        // get back only { id, v, item } properties from the query
+        GET ?fields=id,v,item
 
         // sort result set by ascending `price` and descending `date`
         GET ?sort=price,date%24desc
@@ -144,7 +144,7 @@ paths:
           style: form
           schema:
             type: string
-          example: id,version,createdAt
+          example: id,v,createdAt
         - name: sort
           description: |-
             Comma separated list of schema properties for sorting.
@@ -155,7 +155,7 @@ paths:
           style: form
           schema:
             type: string
-          example: version$desc,name
+          example: v$desc,name
       responses:
         '200':
           description: |-
@@ -368,7 +368,8 @@ paths:
             type: string
       requestBody:
         description: |-
-          The current `version` property must be provided. Otherwise Optimistic Locking will always fail.
+          The current `v` version property must be provided. Otherwise
+          Optimistic Locking will always fail.
 
           Provide all "required" parameters.
         content:
@@ -377,7 +378,7 @@ paths:
               $ref: '#/components/schemas/Document'
             example:
               id: 0lgg8pg824co0Z3dHVGDOqDm
-              version: 2
+              v: 2
       responses:
         '200':
           description: |- 
@@ -779,7 +780,7 @@ components:
           description: document id
           type: string
           example: 0lgg8pg824co0Z3dHVGDOqDm
-        version:
+        v:
           description: document version
           type: integer
           example: 2
