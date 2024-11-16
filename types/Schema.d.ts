@@ -11,18 +11,18 @@ export class Schema {
      * @param {any} schema JSON schema
      * @param {SchemaOptions} [options]
      */
-    constructor(schema: any, options?: import("ajv").Options | undefined);
+    constructor(schema: any, options?: Ajv2020.Options | undefined);
     _jsonSchema: any;
-    _validate: import("ajv").ValidateFunction<unknown>;
+    _validate: any;
     _types: {} | undefined;
     get jsonSchema(): any;
     /**
      * get types by property names
      * @returns {{[property: string]: string}|{}}
      */
-    getTypes(): {} | {
+    getTypes(): {
         [property: string]: string;
-    };
+    } | {};
     /**
      * @param {object} data
      * @returns {{
@@ -34,7 +34,7 @@ export class Schema {
     validate(data?: object): {
         valid: boolean;
         validated: any;
-        errors?: FormErrors | undefined;
+        errors?: FormErrors;
     };
     /**
      * @private
@@ -43,8 +43,9 @@ export class Schema {
      */
     private _ajvToFormErrors;
 }
-export type ErrorObject = import('ajv').ErrorObject;
+export type ErrorObject = import("ajv").ErrorObject;
 export type FormErrors = {
     [property: string]: string;
 };
-export type SchemaOptions = import('ajv').Options;
+export type SchemaOptions = import("ajv").Options;
+import Ajv2020 from 'ajv/dist/2020.js';

@@ -14,11 +14,11 @@ export function searchSchema(options: {
     maxItems?: number | undefined;
 }): {
     validate: (body: object) => {
-        errors?: {} | import("./query.js").ErrorsByField | null | undefined;
-        filter?: {} | import("./query.js").FilterRule | undefined;
+        errors?: ErrorsByField | null | {};
+        filter?: FilterRule | {};
         findOptions?: object;
     };
 };
-export type ErrorsByField = import('./query.js').ErrorsByField;
-export type FilterRule = import('./query.js').FilterRule;
+export type ErrorsByField = import("./query.js").ErrorsByField;
+export type FilterRule = import("./query.js").FilterRule;
 import { Schema } from '../Schema.js';

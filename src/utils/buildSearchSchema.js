@@ -47,7 +47,7 @@ export const buildSearchSchema = (options) => {
 
   for (const [field, propSchema] of iterator) {
     // @ts-expect-error
-    fieldNames.push(/** @type {string} */field)
+    fieldNames.push(/** @type {string} */ field)
     sortProperties[field] = { type: INTEGER, enum: [-1, 1] }
 
     const { type } = propSchema

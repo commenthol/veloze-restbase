@@ -14,15 +14,13 @@ import { LIMIT, MAX_ITEMS } from '../constants.js'
  * @param {number} [options.limit=100]
  * @param {number} [options.maxItems=10000]
  */
-export function searchSchema (options) {
-  const {
-    modelSchema,
-    limit = LIMIT,
-    maxItems = MAX_ITEMS
-  } = options
+export function searchSchema(options) {
+  const { modelSchema, limit = LIMIT, maxItems = MAX_ITEMS } = options
 
-  const { jsonSchema, findOptionNames } =
-    buildSearchSchema({ modelSchema, maxItems })
+  const { jsonSchema, findOptionNames } = buildSearchSchema({
+    modelSchema,
+    maxItems
+  })
   const searchSchema = new Schema(jsonSchema, { removeAdditional: false })
 
   const walkObj = (obj) => {
@@ -33,7 +31,7 @@ export function searchSchema (options) {
     return filter
   }
 
-  function walk (field, value) {
+  function walk(field, value) {
     const filter = {}
 
     if (Array.isArray(value)) {
@@ -69,7 +67,7 @@ export function searchSchema (options) {
    *  findOptions?: object
    * }}
    */
-  function validate (body) {
+  function validate(body) {
     let filter = {}
     const findOptions = { offset: 0, limit }
 

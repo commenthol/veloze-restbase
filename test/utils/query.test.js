@@ -177,8 +177,7 @@ describe('utils/query', function () {
         createdAt: 'unsupported operator $like'
       })
       assert.deepEqual(result.filter, {
-        createdAt: {
-        },
+        createdAt: {},
         item: {
           $like: 'pap',
           $not: 'pap'

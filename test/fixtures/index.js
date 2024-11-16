@@ -102,17 +102,10 @@ export const schema = {
       minItems: 2,
       maxItems: 2,
       items: {
-        enum: [
-          'one',
-          'two',
-          'three',
-          'four'
-        ]
+        enum: ['one', 'two', 'three', 'four']
       }
     }
   },
   additionalProperties: false,
-  required: [
-    'required'
-  ]
+  required: ['required']
 }

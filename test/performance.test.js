@@ -12,9 +12,7 @@ const url = `http://127.0.0.1:${HTTP_PORT}`
 
 const jsonSchema = {
   type: 'object',
-  required: [
-    'item'
-  ],
+  required: ['item'],
   properties: {
     item: {
       type: 'string',
@@ -34,25 +32,29 @@ const randomItem = () => ({
   item: ITEMS[randomInt(ITEMS.length)],
   quantity: randomInt(100)
 })
-const randomItems = (num = 1000) => new Array(num).fill(1).map(() => randomItem())
+const randomItems = (num = 1000) =>
+  new Array(num).fill(1).map(() => randomItem())
 
-const create = (agent, data) => agent
-  .post('/items')
-  .type('json')
-  .send(data)
-  .then(res => res.body)
+const create = (agent, data) =>
+  agent
+    .post('/items')
+    .type('json')
+    .send(data)
+    .then((res) => res.body)
 
-const bulkCreate = (agent, data) => agent
-  .post('/items/create')
-  .type('json')
-  .send(data)
-  .then(res => res.body)
+const bulkCreate = (agent, data) =>
+  agent
+    .post('/items/create')
+    .type('json')
+    .send(data)
+    .then((res) => res.body)
 
-const find = (agent, query) => agent
-  .get('/items')
-  .query(query)
-  .accept('json')
-  .then(res => res.body)
+const find = (agent, query) =>
+  agent
+    .get('/items')
+    .query(query)
+    .accept('json')
+    .then((res) => res.body)
 
 describe.skip('performance tests', function () {
   let server
@@ -89,7 +91,7 @@ describe.skip('performance tests', function () {
       cnt++
       await create(agent, randomItem())
     }
-    const reqPerSec = (cnt * 1000 / duration).toFixed(1)
+    const reqPerSec = ((cnt * 1000) / duration).toFixed(1)
     console.log(`${reqPerSec} creates per second`)
   })
 
@@ -106,7 +108,7 @@ describe.skip('performance tests', function () {
       const res = await find(agent, { item })
       // console.log(item, res.data.length)
     }
-    const reqPerSec = (cnt * 1000 / duration).toFixed(1)
+    const reqPerSec = ((cnt * 1000) / duration).toFixed(1)
     console.log(`${reqPerSec} finds per second`)
   })
 
@@ -123,7 +125,9 @@ describe.skip('performance tests', function () {
       const res = await bulkCreate(agent, randomItems(max))
       // console.log(res)
     }
-    const reqPerSec = (cnt * 1000 / duration)
-    console.log(`${reqPerSec.toFixed(1)} bulk creates per second (${(reqPerSec * max).toFixed(1)})`)
+    const reqPerSec = (cnt * 1000) / duration
+    console.log(
+      `${reqPerSec.toFixed(1)} bulk creates per second (${(reqPerSec * max).toFixed(1)})`
+    )
   })
 })

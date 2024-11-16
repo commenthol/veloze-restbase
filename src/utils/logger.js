@@ -2,8 +2,8 @@ import { EventEmitter } from 'node:events'
 import { logger as loggerF } from 'debug-level'
 
 /**
- * @typedef {import('debug-level/types/LogBase').LogBase} LogBase
- * @typedef {import('debug-level/types/node').LogOptions} LogOptions
+ * @typedef {import('debug-level').Log} LogBase
+ * @typedef {import('debug-level').LogOptions} LogOptions
  * @typedef {(namespace: string, opts?: LogOptions | undefined) => LogBase} LoggerFn
  * @typedef {(namespace: string, options?: LogOptions) => LogBase} LogFn
  */
@@ -16,15 +16,16 @@ import { logger as loggerF } from 'debug-level'
  * })
  */
 class Logger extends EventEmitter {
-  constructor () {
+  constructor() {
     super()
-    this.logger = (namespace, opts) => loggerF(`veloze-restbase:${namespace || ''}`, opts)
+    this.logger = (namespace, opts) =>
+      loggerF(`veloze-restbase:${namespace || ''}`, opts)
   }
 
   /**
    * @param {(...args: any[]) => void} listener
    */
-  register (listener) {
+  register(listener) {
     super.on('log', listener)
     listener(this.logger)
     return this
@@ -34,7 +35,7 @@ class Logger extends EventEmitter {
    * change logger function
    * @param {LogFn} fn
    */
-  change (fn) {
+  change(fn) {
     this.logger = fn
     this.emit('log', fn)
   }

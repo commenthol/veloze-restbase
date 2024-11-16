@@ -3,34 +3,36 @@ import dotenv from 'dotenv'
 
 // let's read env vars from a .env file
 dotenv.config()
-const {
-  HTTP_PORT = 3000
-} = process.env
+const { HTTP_PORT = 3000 } = process.env
 
 const url = `http://127.0.0.1:${HTTP_PORT}`
 
-const create = (data) => supertest(url)
-  .post('/items')
-  .type('json')
-  .send(data)
-  .then(res => res.body)
+const create = (data) =>
+  supertest(url)
+    .post('/items')
+    .type('json')
+    .send(data)
+    .then((res) => res.body)
 
-const update = (data) => supertest(url)
-  .put('/items/' + data.id)
-  .type('json')
-  .send(data)
-  .then(res => res.body)
+const update = (data) =>
+  supertest(url)
+    .put('/items/' + data.id)
+    .type('json')
+    .send(data)
+    .then((res) => res.body)
 
-const get = (id) => supertest(url)
-  .get('/items/' + id)
-  .accept('json')
-  .then(res => res.body)
+const get = (id) =>
+  supertest(url)
+    .get('/items/' + id)
+    .accept('json')
+    .then((res) => res.body)
 
-const find = (query) => supertest(url)
-  .get('/items')
-  .query(query)
-  .accept('json')
-  .then(res => res.body)
+const find = (query) =>
+  supertest(url)
+    .get('/items')
+    .query(query)
+    .accept('json')
+    .then((res) => res.body)
 
 const main = async () => {
   // create some entries

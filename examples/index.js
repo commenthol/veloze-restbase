@@ -28,9 +28,7 @@ const {
 // 1. define a JSON-schema
 const jsonSchema = {
   type: 'object',
-  required: [
-    'item'
-  ],
+  required: ['item'],
   properties: {
     item: {
       type: 'string',

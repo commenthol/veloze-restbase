@@ -75,7 +75,7 @@ export const NO_OPERATOR_PROPS = [
  * @param {Schema} options.modelSchema
  * @param {number} [options.limit=100]
  */
-export function querySchema (options) {
+export function querySchema(options) {
   const { modelSchema, limit: defaultLimit = LIMIT } = options
   const fields = Object.keys(modelSchema.getTypes())
 
@@ -112,7 +112,7 @@ export function querySchema (options) {
    *  findOptions: object
    * }}
    */
-  function validate (query) {
+  function validate(query) {
     const errors = {}
     const filter = {}
     const findOptions = { offset: 0, limit: defaultLimit }
@@ -151,10 +151,15 @@ export function querySchema (options) {
           errors[field] = `unsupported operator ${op}`
           break
         }
-        if (operatorType === STRING &&
+        if (
+          operatorType === STRING &&
           !['$cs', '$not'].includes(op) &&
-          intersection(Object.keys(filter[field] || {}),
-            ['$starts', '$like', '$ends', '$eq']).length
+          intersection(Object.keys(filter[field] || {}), [
+            '$starts',
+            '$like',
+            '$ends',
+            '$eq'
+          ]).length
         ) {
           errors[field] = `duplicated string operator ${op}`
           break
@@ -229,7 +234,7 @@ export const splitDoubleEnc = (str, sep = ',') => {
     } else {
       if (str.at(i + 1) === char) {
         tmp += char
-        i++
+        i += 1
       } else {
         tmp = tmp.trim()
         tmp && arr.push(tmp)
@@ -248,7 +253,7 @@ export const splitByOp = (str, sep = '$') =>
  * @param {Array} iterator
  * @returns {Record<string, string>|{}}
  */
-export function getOperatorTypes (iterator) {
+export function getOperatorTypes(iterator) {
   const operatorTypes = {}
   for (const [field, data] of iterator) {
     const { type, format } = data
@@ -275,22 +280,19 @@ export const normalizeJson = (operatorType, value) => {
 }
 
 export const normalize = (operatorType, value) =>
-  operatorType === 'date'
-    ? new Date(value)
-    : normalizeJson(operatorType, value)
+  operatorType === 'date' ? new Date(value) : normalizeJson(operatorType, value)
 
-export function getSort (value) {
+export function getSort(value) {
   if (Array.isArray(value)) {
     return value
   }
   if (typeof value === 'string') {
-    return value.split(',')
-      .map((val) => {
-        const [field, op] = splitByOp(val)
-        return { [field]: op === '$desc' ? -1 : 1 }
-      })
+    return value.split(',').map((val) => {
+      const [field, op] = splitByOp(val)
+      return { [field]: op === '$desc' ? -1 : 1 }
+    })
   }
 }
 
 const intersection = (arr, comp) =>
-  arr.filter(item => comp.some((el) => el === item))
+  arr.filter((item) => comp.some((el) => el === item))

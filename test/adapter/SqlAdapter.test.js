@@ -524,10 +524,7 @@ describe('adapters/SqlAdapter', function () {
       it('query for multiple fields', function () {
         assert.deepEqual(
           convertFilterRule({
-            $or: [
-              { item: { $eq: 'Journal' } },
-              { item: { $like: 'oo' } }
-            ]
+            $or: [{ item: { $eq: 'Journal' } }, { item: { $like: 'oo' } }]
           }),
           {
             [Op.or]: [
@@ -586,7 +583,6 @@ describe('adapters/SqlAdapter', function () {
     it('needs modelName', function () {
       assert.throws(
         () => {
-          // eslint-disable-next-line no-new
           new SqlAdapter({})
         },
         (e) => e.message === 'need modelName'
@@ -596,13 +592,11 @@ describe('adapters/SqlAdapter', function () {
     it('need jsonSchema', function () {
       assert.throws(
         () => {
-          // eslint-disable-next-line no-new
           new SqlAdapter({ modelName: 'test' })
         },
         (e) => e.message === 'need jsonSchema'
       )
     })
-
     ;['id', 'v'].forEach((prop) => {
       it(`disallowes ${prop} in jsonSchema`, function () {
         const jsonSchema = {
@@ -613,7 +607,6 @@ describe('adapters/SqlAdapter', function () {
         }
         assert.throws(
           () => {
-          // eslint-disable-next-line no-new
             new SqlAdapter({ modelName: 'test', jsonSchema })
           },
           (e) => e.message === `jsonSchema property "${prop}" is not allowed`

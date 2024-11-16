@@ -4,21 +4,21 @@ export class ModelAdapter {
      * @param {ModelAdapterOptions} [options]
      */
     constructor(adapter: Adapter, options?: ModelAdapterOptions | undefined);
-    _adapter: import("../src/adapters/Adapter").Adapter;
+    _adapter: import("../src/adapters/Adapter.js").Adapter;
     _schema: import("./Schema.js").Schema;
     _querySchema: {
         schema: import("./Schema.js").Schema;
-        validate: (query: Record<string, string>) => {
-            errors: {} | import("./utils/query.js").ErrorsByField | null;
-            filter: {} | import("./utils/query.js").FilterRule;
-            findOptions: any;
+        validate: (query: Record<StringWithOperator, string>) => {
+            errors: ErrorsByField | null | {};
+            filter: FilterRule | {};
+            findOptions: object;
         };
     };
     _searchSchema: {
-        validate: (body: any) => {
-            errors?: {} | import("./utils/query.js").ErrorsByField | null | undefined;
-            filter?: {} | import("./utils/query.js").FilterRule | undefined;
-            findOptions?: any;
+        validate: (body: object) => {
+            errors?: ErrorsByField | null | {};
+            filter?: FilterRule | {};
+            findOptions?: object;
         };
     };
     _randomUuid: Function;
@@ -81,9 +81,9 @@ export class ModelAdapter {
         deletedCount: number;
     }>;
 }
-export type Request = import('veloze/types').Request;
-export type Response = import('veloze/types').Response;
-export type Adapter = import('../src/adapters/Adapter').Adapter;
+export type Request = import("veloze/types").Request;
+export type Response = import("veloze/types").Response;
+export type Adapter = import("../src/adapters/Adapter.js").Adapter;
 export type ModelAdapterOptions = {
     /**
      * A random UUID function which shall guarantee a strong order on time. This is required to guarantee the order of records on querying. Do not use a function like UUIDv4 unless you ensure this ordering by other means, e.g. use createdAt timestamp together with an index. Consider the use of the provided `uuid7()` method. Defaults to `nanoid()` which gives a 24 char long time based randomized id.

@@ -9,7 +9,7 @@ cd(dir)
 rm('-rf', './types')
 exec('tsc')
 
-find('./src/**/*.d.ts').forEach(source => {
+find('./src/**/*.d.ts').forEach((source) => {
   const dest = source.replace('./src/', './types/')
   cp(source, dest)
 })

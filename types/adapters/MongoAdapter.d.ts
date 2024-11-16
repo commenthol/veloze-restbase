@@ -8,7 +8,7 @@ export class MongoAdapter extends Adapter {
     constructor(options: MongoAdapterOptions);
     adapterType: string;
     _database: string;
-    _indexes: import("../types").Index[] | undefined;
+    _indexes: import("../types.js").Index[] | undefined;
     /**
      * @param {MongoInitOptions} options
      */
@@ -27,12 +27,12 @@ export namespace MongoAdapter {
     export { convertFilterRule };
     export { convertFindOptions };
 }
-export type Index = import('../types').Index;
+export type Index = import("../types.js").Index;
 export type MongoInitOptions = {
     client?: import("mongodb").MongoClient | undefined;
-    indexes?: import("../types").Index[] | undefined;
+    indexes?: import("../types.js").Index[] | undefined;
 };
-export type AdapterOptions = import('./Adapter').AdapterOptions;
+export type AdapterOptions = import("./Adapter.js").AdapterOptions;
 export type MongoAdapterOptionsExt = {
     /**
      * database name
@@ -70,9 +70,9 @@ declare function convertFilterRule(filterRule: object): object;
  * @returns {object}
  */
 declare function convertFindOptions(findOptions: {
-    offset?: number | undefined;
-    limit?: number | undefined;
-    fields?: string[] | undefined;
-    sort?: any[] | undefined;
+    offset?: number;
+    limit?: number;
+    fields?: string[];
+    sort?: object[];
 }): object;
 export {};

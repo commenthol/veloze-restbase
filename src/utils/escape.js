@@ -4,8 +4,7 @@
  * escapeRegExp('($^|^$)')
  * //> '\\(\\$\\^\\|\\^\\$\\)'
  */
-export const escapeRegExp = string =>
+export const escapeRegExp = (string) =>
   string.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
 
-export const escapeLike = string =>
-  string.replace(/%/g, '\\$&')
+export const escapeLike = (string) => string.replace(/%/g, '\\$&')

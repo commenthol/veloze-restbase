@@ -21,10 +21,7 @@ import { Schema } from '../Schema.js'
  */
 
 const DEFAULT_SCHEMA = {
-  required: [
-    'id',
-    'v'
-  ],
+  required: ['id', 'v'],
   properties: {
     id: {
       type: 'string'
@@ -52,7 +49,7 @@ export class Adapter {
   /**
    * @param {AdapterOptions} options
    */
-  constructor (options) {
+  constructor(options) {
     const {
       modelName,
       jsonSchema,
@@ -83,35 +80,35 @@ export class Adapter {
    * gives access to the database driver
    * @returns {any} database driver for model
    */
-  get model () {
+  get model() {
     return this._model
   }
 
   /**
    * @returns {string}
    */
-  get modelName () {
+  get modelName() {
     return this._modelName
   }
 
   /**
    * @returns {boolean}
    */
-  get optimisticLocking () {
+  get optimisticLocking() {
     return this._optimisticLocking
   }
 
   /**
    * @returns {boolean}
    */
-  get instantDeletion () {
+  get instantDeletion() {
     return this._instantDeletion
   }
 
   /**
    * @returns {Schema}
    */
-  get schema () {
+  get schema() {
     return this._schema
   }
 
@@ -121,7 +118,7 @@ export class Adapter {
    * @returns {Promise<object>} created doc
    */
   /* c8 ignore next 3 */
-  async create (doc) {
+  async create(doc) {
     return doc
   }
 
@@ -131,62 +128,62 @@ export class Adapter {
    * @returns {Promise<object>} updated doc
    */
   /* c8 ignore next 3 */
-  async update (doc) {
+  async update(doc) {
     return doc
   }
 
   /**
    * find one doc in database by id
-   * @param {string} id
+   * @param {string} _id
    * @returns {Promise<object>} found doc
    */
   /* c8 ignore next 3 */
-  async findById (id) {
+  async findById(_id) {
     return {}
   }
 
   /**
    * find many documents in database
-   * @param {object} filter filter Rules for items
-   * @param {object} findOptions
+   * @param {object} _filter filter Rules for items
+   * @param {object} _findOptions
    * @returns {Promise<object>} found items
    */
   /* c8 ignore next 3 */
-  async findMany (filter, findOptions) {
+  async findMany(_filter, _findOptions) {
     return { count: undefined, data: [] }
   }
 
   /**
    * delete document from database
-   * @param {string} id
+   * @param {string} _id
    * @returns {Promise<{
    *  deletedCount: number
    * }>} deleted stats
    */
   /* c8 ignore next 3 */
-  async deleteById (id) {
+  async deleteById(_id) {
     return { deletedCount: 0 }
   }
 
   /**
    * delete many documents in database
-   * @param {object} filter filter Rules for items
+   * @param {object} _filter filter Rules for items
    * @returns {Promise<{
    *  deletedCount: number
    * }>} deleted stats
    */
   /* c8 ignore next 3 */
-  async deleteMany (filter) {
+  async deleteMany(_filter) {
     return { deletedCount: 0 }
   }
 
   /**
    * delete all documents with deletedAt timestamp older than date
-   * @param {Date} [date] defaults to Date.now() - 30d
+   * @param {Date} [_date] defaults to Date.now() - 30d
    * @returns {Promise<object>} deleted stats
    */
   /* c8 ignore next 3 */
-  async deleteDeleted (date) {
+  async deleteDeleted(_date) {
     return {}
   }
 }

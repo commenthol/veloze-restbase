@@ -22,11 +22,10 @@ export class Schema {
    * @param {any} schema JSON schema
    * @param {SchemaOptions} [options]
    */
-  constructor (schema, options) {
-    const {
-      ...ajvOpts
-    } = options || {}
+  constructor(schema, options) {
+    const { ...ajvOpts } = options || {}
 
+    // @ts-expect-error
     const ajv = new Ajv2020({
       strict: true,
       allErrors: true,
@@ -36,6 +35,7 @@ export class Schema {
       ...ajvOpts
     })
 
+    // @ts-expect-error
     ajvFormats(ajv)
     ajv.addKeyword('$anchor')
     this._jsonSchema = schema
@@ -44,7 +44,7 @@ export class Schema {
     this._types = undefined
   }
 
-  get jsonSchema () {
+  get jsonSchema() {
     return this._jsonSchema
   }
 
@@ -52,7 +52,7 @@ export class Schema {
    * get types by property names
    * @returns {{[property: string]: string}|{}}
    */
-  getTypes () {
+  getTypes() {
     /* c8 ignore next 3 */
     if (this._types) {
       return this._types
@@ -75,7 +75,7 @@ export class Schema {
    *  errors?: FormErrors
    * }}
    */
-  validate (data = {}) {
+  validate(data = {}) {
     const validated = structuredClone(data)
     // @note this._validate modifies data object if `default` is set!
     const valid = this._validate(validated)
@@ -91,7 +91,7 @@ export class Schema {
    * @param {ErrorObject[]|null|undefined} errors
    * @returns {object|FormErrors}
    */
-  _ajvToFormErrors (errors) {
+  _ajvToFormErrors(errors) {
     /* c8 ignore next 3 */
     if (!errors) {
       return
@@ -102,7 +102,6 @@ export class Schema {
     log.debug(errors)
 
     for (const { instancePath, keyword, params, message } of errors) {
-      // eslint-disable-next-line no-unused-vars
       let field = instancePath
       switch (keyword) {
         case 'required':
@@ -117,7 +116,7 @@ export class Schema {
         log.debug(errors)
         continue
       }
-      if (message?.startsWith('must have required property \'$')) {
+      if (message?.startsWith("must have required property '$")) {
         continue
       }
 

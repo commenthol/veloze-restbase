@@ -7,4 +7,4 @@ export function buildSearchSchema(options: {
     findOptionNames: string[];
     operatorTypes: Record<string, string>;
 };
-export type Schema = import('../Schema.js').Schema;
+export type Schema = import("../Schema.js").Schema;

@@ -8,7 +8,6 @@ describe('adapters/MongoAdapter', function () {
     it('shall throw if there is no database name', function () {
       assert.throws(
         () => {
-          // eslint-disable-next-line no-new
           new MongoAdapter({})
         },
         (err) => err.message === 'need database'
@@ -18,7 +17,6 @@ describe('adapters/MongoAdapter', function () {
     it('shall throw if there is no modelName name', function () {
       assert.throws(
         () => {
-          // eslint-disable-next-line no-new
           new MongoAdapter({ database: 'test' })
         },
         (err) => err.message === 'need modelName'
@@ -28,7 +26,6 @@ describe('adapters/MongoAdapter', function () {
     it('shall throw if there is no jsonSchema name', function () {
       assert.throws(
         () => {
-          // eslint-disable-next-line no-new
           new MongoAdapter({ database: 'test', modelName: 'tests' })
         },
         (err) => err.message === 'need jsonSchema'

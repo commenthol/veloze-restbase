@@ -1,8 +1,6 @@
 export const dbItemsSchema = {
   type: 'object',
-  required: [
-    'item'
-  ],
+  required: ['item'],
   properties: {
     item: {
       type: 'string'
@@ -37,9 +35,44 @@ export const dbItemsSchema = {
 }
 
 export const dbItems = [
-  { item: 'journal', quantity: 25, height: 14, width: 21, unit: 'cm', status: 'A' },
-  { item: 'notebook', quantity: 50, height: 9, width: 11, unit: 'in', status: 'A' },
-  { item: 'paper', quantity: 100, height: 8.5, width: 11, unit: 'in', status: 'D' },
-  { item: 'planner', quantity: 75, height: 22.85, width: 30, unit: 'cm', status: 'D' },
-  { item: 'postcard', quantity: 45, height: 10, width: 15.25, unit: 'cm', status: 'A' }
+  {
+    item: 'journal',
+    quantity: 25,
+    height: 14,
+    width: 21,
+    unit: 'cm',
+    status: 'A'
+  },
+  {
+    item: 'notebook',
+    quantity: 50,
+    height: 9,
+    width: 11,
+    unit: 'in',
+    status: 'A'
+  },
+  {
+    item: 'paper',
+    quantity: 100,
+    height: 8.5,
+    width: 11,
+    unit: 'in',
+    status: 'D'
+  },
+  {
+    item: 'planner',
+    quantity: 75,
+    height: 22.85,
+    width: 30,
+    unit: 'cm',
+    status: 'D'
+  },
+  {
+    item: 'postcard',
+    quantity: 45,
+    height: 10,
+    width: 15.25,
+    unit: 'cm',
+    status: 'A'
+  }
 ]

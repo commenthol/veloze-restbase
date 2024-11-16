@@ -27,10 +27,7 @@ describe('utils/search', function () {
       const result = _searchSchema.validate(body)
       assert.deepEqual(result, {
         filter: {
-          $or: [
-            { id: { $eq: 'a' } },
-            { id: { $eq: 'b' } }
-          ]
+          $or: [{ id: { $eq: 'a' } }, { id: { $eq: 'b' } }]
         },
         findOptions: { offset: 1, limit: 100 }
       })
@@ -44,7 +41,8 @@ describe('utils/search', function () {
       })
     })
 
-    itDisabled('not rule', function () { /// disable $not rule
+    itDisabled('not rule', function () {
+      /// disable $not rule
       const body = { $not: { id: 'a' }, limit: 10 }
       const result = _searchSchema.validate(body)
       assert.deepEqual(result, {
@@ -62,9 +60,7 @@ describe('utils/search', function () {
         filter: {
           $and: [
             {
-              $or: [
-                { id: { $eq: 'a' } },
-                { id: { $eq: 'b' } }]
+              $or: [{ id: { $eq: 'a' } }, { id: { $eq: 'b' } }]
             },
             { height: { $ne: 5 } }
           ]
@@ -80,13 +76,12 @@ describe('utils/search', function () {
       const result = _searchSchema.validate(body)
       assert.deepEqual(result, {
         filter: {
-          $and: [{
-            $or: [
-              { id: { $eq: 'a' } },
-              { id: { $eq: 'b' } }
-            ]
-          },
-          { width: 5 }]
+          $and: [
+            {
+              $or: [{ id: { $eq: 'a' } }, { id: { $eq: 'b' } }]
+            },
+            { width: 5 }
+          ]
         },
         findOptions: { offset: 0, limit: 100 }
       })

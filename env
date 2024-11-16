@@ -1,11 +1,13 @@
 ## cp env .env
 
-MONGODB_URL=mongodb://root:example@127.0.0.1:27017
+MONGO_INITDB_ROOT_USERNAME=root
+MONGO_INITDB_ROOT_PASSWORD=***
+MONGODB_URL=mongodb://root:***@127.0.0.1:27017
 
 ## -- mariadb
 ## CREATE DATABASE test DEFAULT CHARACTER SET = utf8mb4 DEFAULT COLLATE = utf8mb4_general_ci;
 # SQLDB_USER=root
-# SQLDB_PASSWORD=example
+# SQLDB_PASSWORD=***
 # SQLDB_HOST=127.0.0.01
 # SQLDB_PORT=3306
 # SQLDB_DIALECT=mariadb
@@ -13,7 +15,7 @@ MONGODB_URL=mongodb://root:example@127.0.0.1:27017
 ## -- postgres
 ## create database test;
 SQLDB_USER=root
-SQLDB_PASSWORD=example
+SQLDB_PASSWORD=***
 SQLDB_HOST=127.0.0.01
 SQLDB_PORT=5432
 SQLDB_DIALECT=postgres
@@ -22,7 +24,7 @@ SQLDB_DIALECT=postgres
 ## create database root;
 ## create database test;
 # SQLDB_USER=root
-# SQLDB_PASSWORD=example
+# SQLDB_PASSWORD=***
 # SQLDB_HOST=127.0.0.01
 # SQLDB_PORT=26257
 # SQLDB_DIALECT=postgres

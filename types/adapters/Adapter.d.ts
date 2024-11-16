@@ -43,43 +43,43 @@ export class Adapter {
     update(doc: object): Promise<object>;
     /**
      * find one doc in database by id
-     * @param {string} id
+     * @param {string} _id
      * @returns {Promise<object>} found doc
      */
-    findById(id: string): Promise<object>;
+    findById(_id: string): Promise<object>;
     /**
      * find many documents in database
-     * @param {object} filter filter Rules for items
-     * @param {object} findOptions
+     * @param {object} _filter filter Rules for items
+     * @param {object} _findOptions
      * @returns {Promise<object>} found items
      */
-    findMany(filter: object, findOptions: object): Promise<object>;
+    findMany(_filter: object, _findOptions: object): Promise<object>;
     /**
      * delete document from database
-     * @param {string} id
+     * @param {string} _id
      * @returns {Promise<{
      *  deletedCount: number
      * }>} deleted stats
      */
-    deleteById(id: string): Promise<{
+    deleteById(_id: string): Promise<{
         deletedCount: number;
     }>;
     /**
      * delete many documents in database
-     * @param {object} filter filter Rules for items
+     * @param {object} _filter filter Rules for items
      * @returns {Promise<{
      *  deletedCount: number
      * }>} deleted stats
      */
-    deleteMany(filter: object): Promise<{
+    deleteMany(_filter: object): Promise<{
         deletedCount: number;
     }>;
     /**
      * delete all documents with deletedAt timestamp older than date
-     * @param {Date} [date] defaults to Date.now() - 30d
+     * @param {Date} [_date] defaults to Date.now() - 30d
      * @returns {Promise<object>} deleted stats
      */
-    deleteDeleted(date?: Date | undefined): Promise<object>;
+    deleteDeleted(_date?: Date | undefined): Promise<object>;
 }
 export type AdapterOptions = {
     /**
@@ -91,7 +91,7 @@ export type AdapterOptions = {
      */
     jsonSchema: object;
     /**
-     * enable optimistic locking (based on version property)
+     * enable optimistic locking (based on version property `v`)
      */
     optimisticLocking?: boolean | undefined;
     /**

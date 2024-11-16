@@ -1,11 +1,11 @@
 /**
- * @typedef {import('../types').Index} Index
+ * @typedef {import('../types.js').Index} Index
  */ /**
 * @typedef {object} SqlInitOptions
 * @property {import('sequelize').Sequelize} client
 * @property {Index[]} [indexes]
 */ /**
-* @typedef {import('./Adapter').AdapterOptions} AdapterOptions
+* @typedef {import('./Adapter.js').AdapterOptions} AdapterOptions
 */ /**
 * @typedef {object} SqlAdapterOptionsExt
 * @property {string} database database name
@@ -20,7 +20,7 @@ export class SqlAdapter extends Adapter {
      * @param {SqlAdapterOptions} options
      */
     constructor(options: SqlAdapterOptions);
-    _indexes: import("../types").Index[] | undefined;
+    _indexes: import("../types.js").Index[] | undefined;
     adapterType: string;
     /**
      * @param {SqlInitOptions} options
@@ -44,13 +44,13 @@ export namespace SqlAdapter {
     export { convertFilterRule };
     export { convertFindOptions };
 }
-export type Schema = import('../Schema.js').Schema;
-export type Index = import('../types').Index;
+export type Schema = import("../Schema.js").Schema;
+export type Index = import("../types.js").Index;
 export type SqlInitOptions = {
-    client: import('sequelize').Sequelize;
-    indexes?: import("../types").Index[] | undefined;
+    client: import("sequelize").Sequelize;
+    indexes?: import("../types.js").Index[] | undefined;
 };
-export type AdapterOptions = import('./Adapter').AdapterOptions;
+export type AdapterOptions = import("./Adapter.js").AdapterOptions;
 export type SqlAdapterOptionsExt = {
     /**
      * database name

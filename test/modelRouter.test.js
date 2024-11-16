@@ -28,7 +28,7 @@ const {
 const UNDEF_REQ_ID = '00000000-0000-0000-0000-000000000000'
 const MAX_BULK_INSERTS = 1e3
 
-function testSet (options) {
+function testSet(options) {
   const cache = {}
 
   describe('basic operations', function () {
@@ -39,7 +39,7 @@ function testSet (options) {
         .send(null)
         .expect(400)
         .then(({ body }) => {
-          const { reqId, ...others } = body
+          const { reqId: _, ...others } = body
           assert.deepEqual(others, {
             status: 400,
             message: 'no document provided'
@@ -67,7 +67,7 @@ function testSet (options) {
         .send({ item: 'folder', quantity: 12.7, width: 21, height: 30 })
         .expect(400)
         .then(({ body }) => {
-          const { reqId, ...others } = body
+          const { reqId: _, ...others } = body
           assert.deepEqual(others, {
             status: 400,
             message: 'validation error',
@@ -171,17 +171,13 @@ function testSet (options) {
     it('shall fail to delete record by id', function () {
       assert.ok(cache.doc, 'need cache from previous tests')
       const id = 'foobar'
-      return supertest(options.router.handle)
-        .delete(`/items/${id}`)
-        .expect(404)
+      return supertest(options.router.handle).delete(`/items/${id}`).expect(404)
     })
 
     it('shall delete record by id', function () {
       assert.ok(cache.doc, 'need cache from previous tests')
       const { id } = cache.doc
-      return supertest(options.router.handle)
-        .delete(`/items/${id}`)
-        .expect(204)
+      return supertest(options.router.handle).delete(`/items/${id}`).expect(204)
     })
 
     it('shall delete all records marked as deleted', async function () {
@@ -493,7 +489,7 @@ function testSet (options) {
           .post('/items/create')
           .type('json')
           .expect(400, { status: 400, message: 'No documents' })
-          // .then(({ body, headers, status }) => console.log({ body, headers, status }))
+        // .then(({ body, headers, status }) => console.log({ body, headers, status }))
       })
 
       it('shall fail due to bad JSON', function () {
@@ -501,7 +497,10 @@ function testSet (options) {
           .post('/items/create')
           .type('json')
           .send('{ item: "foo"')
-          .expect(400, { status: 400, message: 'Invalid JSON (Unexpected "i" at position 3 in state STOP)' })
+          .expect(400, {
+            status: 400,
+            message: 'Invalid JSON (Unexpected "i" at position 3 in state STOP)'
+          })
       })
 
       it('shall fail to create multiple documents if no array of documents is send', function () {
@@ -526,7 +525,7 @@ function testSet (options) {
             'foo'
           ])
           .expect(200)
-          .then(({ status, body, headers }) => {
+          .then(({ body, headers }) => {
             assert.equal(typeof headers['x-request-id'], 'string')
             assert.notEqual(headers['x-request-id'], UNDEF_REQ_ID)
             assert.deepEqual(stripIds(body), [
@@ -544,7 +543,9 @@ function testSet (options) {
                 message: 'No document'
               }
             ])
-            store.create = body.filter(item => !item.status).map(({ item, id, v }) => ({ item, id, v }))
+            store.create = body
+              .filter((item) => !item.status)
+              .map(({ item, id, v }) => ({ item, id, v }))
           })
       })
 
@@ -563,7 +564,10 @@ function testSet (options) {
           .expect(200)
           .then(() => {
             const diff = Date.now() - start
-            console.log('%s inserts per second', (max * 1000 / diff).toFixed(2))
+            console.log(
+              '%s inserts per second',
+              ((max * 1000) / diff).toFixed(2)
+            )
           })
       })
     })
@@ -586,7 +590,7 @@ function testSet (options) {
 
       it('shall update multiple documents', function () {
         assert.ok(store.create, 'need result from create test')
-        const payload = store.create.map(doc => {
+        const payload = store.create.map((doc) => {
           doc.item += '1'
           return doc
         })
@@ -597,7 +601,7 @@ function testSet (options) {
           .type('json')
           .send(payload)
           .expect(200)
-          .then(({ status, body, headers }) => {
+          .then(({ body, headers }) => {
             assert.equal(typeof headers['x-request-id'], 'string')
             assert.notEqual(headers['x-request-id'], UNDEF_REQ_ID)
             assert.deepEqual(stripIds(body), [
@@ -649,14 +653,14 @@ function testSet (options) {
       it('shall delete items by id', function () {
         assert.ok(store.create, 'need result from create test')
         const payload = {
-          id: store.create.map(doc => doc.id)
+          id: store.create.map((doc) => doc.id)
         }
         return supertest(options.router.handle)
           .post('/items/delete')
           .type('json')
           .send(payload)
           .expect(200)
-          .then(({ status, headers, body }) => {
+          .then(({ headers, body }) => {
             assert.equal(typeof headers['x-request-id'], 'string')
             assert.notEqual(headers['x-request-id'], UNDEF_REQ_ID)
             assert.deepEqual(body, { deletedCount: 3 })
@@ -674,7 +678,10 @@ function testSet (options) {
           .expect(200)
           .then(() => {
             const diff = Date.now() - start
-            console.log('%s deletes per second', (max * 1000 / diff).toFixed(2))
+            console.log(
+              '%s deletes per second',
+              ((max * 1000) / diff).toFixed(2)
+            )
           })
       })
     })
@@ -776,7 +783,7 @@ describe('modelRouter', function () {
       if (SQLDB_DIALECT !== 'postgres') {
         return
       }
-      // eslint-disable-next-line eqeqeq
+
       if (SQLDB_PORT == 26257) {
         await createDatabasePostgres({
           user: SQLDB_USER,
@@ -895,4 +902,4 @@ describe('modelRouter', function () {
 })
 
 const stripIds = (arr) =>
-  arr.map(({ id, createdAt, updatedAt, ...rest }) => rest)
+  arr.map(({ id: _, createdAt: _1, updatedAt: _2, ...rest }) => rest)

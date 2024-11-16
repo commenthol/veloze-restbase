@@ -22,13 +22,13 @@ const isSafeInt = (num) =>
   isNumber(num) && num <= MAX_SAFE_INTEGER && num >= MIN_SAFE_INTEGER
 
 /**
- * @typedef {import('../types').Index} Index
+ * @typedef {import('../types.js').Index} Index
  *//**
  * @typedef {object} SqlInitOptions
  * @property {import('sequelize').Sequelize} client
  * @property {Index[]} [indexes]
  *//**
- * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
+ * @typedef {import('./Adapter.js').AdapterOptions} AdapterOptions
  *//**
  * @typedef {object} SqlAdapterOptionsExt
  * @property {string} database database name
@@ -43,7 +43,7 @@ export class SqlAdapter extends Adapter {
   /**
    * @param {SqlAdapterOptions} options
    */
-  constructor (options) {
+  constructor(options) {
     const {
       modelName,
       jsonSchema,
@@ -56,7 +56,7 @@ export class SqlAdapter extends Adapter {
     super({ modelName, jsonSchema, optimisticLocking, instantDeletion })
     this._indexes = indexes
     if (client) {
-      this.init({ client, indexes }).catch(err => log.error(err))
+      this.init({ client, indexes }).catch((err) => log.error(err))
     }
     this.adapterType = 'sequelize'
   }
@@ -64,7 +64,7 @@ export class SqlAdapter extends Adapter {
   /**
    * @param {SqlInitOptions} options
    */
-  async init (options) {
+  async init(options) {
     const { client, indexes: __indexes } = options
     const indexes = __indexes || this._indexes || []
     await client.authenticate()
@@ -108,7 +108,7 @@ export class SqlAdapter extends Adapter {
     await client.sync()
   }
 
-  async create (doc) {
+  async create(doc) {
     const result = await this._model.create(doc)
     if (!result?.dataValues) {
       throw new HttpError(400, 'document creation failed')
@@ -116,7 +116,7 @@ export class SqlAdapter extends Adapter {
     return nullToUndef(result.dataValues)
   }
 
-  async update (doc) {
+  async update(doc) {
     const { id, v, ..._doc } = doc
     const filter = { id, deletedAt: null }
     if (this.optimisticLocking) {
@@ -135,7 +135,7 @@ export class SqlAdapter extends Adapter {
     return { id, ..._doc }
   }
 
-  async findById (id) {
+  async findById(id) {
     const where = { id, deletedAt: null }
     const result = await this._model.findOne({ where })
     if (!result?.dataValues) {
@@ -144,7 +144,7 @@ export class SqlAdapter extends Adapter {
     return nullToUndef(result.dataValues)
   }
 
-  async findMany (filter, findOptions) {
+  async findMany(filter, findOptions) {
     const where = {
       ...convertFilterRule(filter),
       deletedAt: null
@@ -165,7 +165,7 @@ export class SqlAdapter extends Adapter {
     return obj
   }
 
-  async deleteById (id) {
+  async deleteById(id) {
     const where = { id, deletedAt: null }
     const result = this.instantDeletion
       ? await this._model.destroy({ where })
@@ -185,7 +185,7 @@ export class SqlAdapter extends Adapter {
    *  deletedCount: number
    * }>}
    */
-  async deleteMany (filter) {
+  async deleteMany(filter) {
     const where = {
       ...convertFilterRule(filter),
       deletedAt: null
@@ -204,9 +204,11 @@ export class SqlAdapter extends Adapter {
     }
   }
 
-  async deleteDeleted (date) {
+  async deleteDeleted(date) {
     date = date || new Date(Date.now() - 30 * DAY)
-    const result = await this._model.destroy({ where: { deletedAt: { [Op.lte]: date } } })
+    const result = await this._model.destroy({
+      where: { deletedAt: { [Op.lte]: date } }
+    })
     return {
       deletedCount: result
     }
@@ -218,7 +220,7 @@ export class SqlAdapter extends Adapter {
  * @param {Schema|object} schema
  * @returns {object} Sequelize model
  */
-function schemaToModel (schema) {
+function schemaToModel(schema) {
   const _schema = schema.jsonSchema || schema
   if (!_schema) {
     throw new Error('need a schema')
@@ -233,7 +235,7 @@ SqlAdapter.schemaToModel = schemaToModel
 /**
  * @see https://sequelize.org/docs/v6/core-concepts/model-querying-basics/
  */
-function convertFilterRule (filterRule) {
+function convertFilterRule(filterRule) {
   const filter = {}
   for (const [field, rules] of Object.entries(filterRule)) {
     /* c8 ignore next 4 */
@@ -251,12 +253,14 @@ function convertFilterRule (filterRule) {
     //   continue
     // } else
     if (['$and', '$or'].includes(field)) {
-      filter[Op[field.slice(1)]] = rules.map(rule => convertFilterRule(rule))
+      filter[Op[field.slice(1)]] = rules.map((rule) => convertFilterRule(rule))
       continue
     }
     if (Array.isArray(rules.$eq)) {
       filter[Op.and] = filter[Op.and] || []
-      filter[Op.and].push({ [Op.or]: rules.$eq.map(item => ({ [field]: item })) })
+      filter[Op.and].push({
+        [Op.or]: rules.$eq.map((item) => ({ [field]: item }))
+      })
       continue
     }
 
@@ -310,7 +314,7 @@ function convertFilterRule (filterRule) {
 }
 SqlAdapter.convertFilterRule = convertFilterRule
 
-function convertFindOptions (findOptions) {
+function convertFindOptions(findOptions) {
   const { offset, limit, fields, sort } = findOptions
   const options = {
     offset: 0,

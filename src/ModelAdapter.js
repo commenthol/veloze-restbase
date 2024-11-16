@@ -8,7 +8,7 @@ import JsonStream from '@search-dump/jsonstream'
  * @typedef {import('veloze/types').Request} Request
  * @typedef {import('veloze/types').Response} Response
  *
- * @typedef {import('../src/adapters/Adapter').Adapter} Adapter
+ * @typedef {import('../src/adapters/Adapter.js').Adapter} Adapter
  *
  * @typedef {object} ModelAdapterOptions
  * @property {Function} [randomUuid] A random UUID function which shall guarantee a strong order on time. This is required to guarantee the order of records on querying. Do not use a function like UUIDv4 unless you ensure this ordering by other means, e.g. use createdAt timestamp together with an index. Consider the use of the provided `uuid7()` method. Defaults to `nanoid()` which gives a 24 char long time based randomized id.
@@ -31,7 +31,7 @@ export class ModelAdapter {
    * @param {Adapter} adapter
    * @param {ModelAdapterOptions} [options]
    */
-  constructor (adapter, options) {
+  constructor(adapter, options) {
     const {
       randomUuid = nanoid,
       bodyLimit = MAX_BODY_LIMIT,
@@ -46,12 +46,12 @@ export class ModelAdapter {
     this._bodyLimit = bodyLimit
   }
 
-  get modelName () {
+  get modelName() {
     return this._adapter.modelName
   }
 
   /* c8 ignore next 3 */
-  get model () {
+  get model() {
     return this._adapter.model
   }
 
@@ -60,7 +60,7 @@ export class ModelAdapter {
    * @param {object} doc
    * @returns {Promise<object>} created doc
    */
-  async create (doc) {
+  async create(doc) {
     if (!doc) {
       throw new HttpError(400, 'no document provided')
     }
@@ -95,7 +95,7 @@ export class ModelAdapter {
    * @param {object} doc
    * @returns {Promise<object>} updated doc
    */
-  async update (doc) {
+  async update(doc) {
     /* c8 ignore next 3 */
     if (!doc) {
       throw new HttpError(400)
@@ -104,7 +104,7 @@ export class ModelAdapter {
     if (!doc.id) {
       throw new HttpError(400, 'need id parameter')
     }
-    const { createdAt, ..._doc } = doc
+    const { createdAt: _, ..._doc } = doc
     if (_doc.updatedAt instanceof Date) {
       // schema validation does not work with dates
       _doc.updatedAt = _doc.updatedAt.toISOString()
@@ -124,7 +124,7 @@ export class ModelAdapter {
    * @param {string} id
    * @returns {Promise<object>} found doc
    */
-  async findById (id) {
+  async findById(id) {
     /* c8 ignore next 3  */
     if (!id) {
       throw new HttpError(400, 'need id parameter')
@@ -141,7 +141,7 @@ export class ModelAdapter {
    * @param {object} query
    * @returns {Promise<object>} found items
    */
-  async findMany (query) {
+  async findMany(query) {
     const { errors, filter, findOptions } = this._querySchema.validate(query)
     if (errors) {
       throw new HttpError(400, 'validation error', { info: errors })
@@ -152,7 +152,7 @@ export class ModelAdapter {
     return { offset, limit, count: data?.count, data: data?.data }
   }
 
-  async searchMany (body) {
+  async searchMany(body) {
     const { errors, filter, findOptions } = this._searchSchema.validate(body)
     if (errors) {
       throw new HttpError(400, 'validation error', { info: errors })
@@ -168,7 +168,7 @@ export class ModelAdapter {
    * @param {string} id
    * @returns {Promise<object>}
    */
-  async deleteById (id) {
+  async deleteById(id) {
     /* c8 ignore next 3 */
     if (!id) {
       throw new HttpError(400, 'need id parameter')
@@ -185,7 +185,7 @@ export class ModelAdapter {
    * @param {Date} [date] defaults to Date.now() - 30d
    * @returns {Promise<object>} deleted stats
    */
-  deleteDeleted (date) {
+  deleteDeleted(date) {
     return this._adapter.deleteDeleted(date)
   }
 
@@ -193,7 +193,7 @@ export class ModelAdapter {
    * @param {Request} req
    * @param {Response} res
    */
-  createMany (req, res) {
+  createMany(req, res) {
     const handleErr = (httpErr) => {
       let body = manyError(httpErr, res)
       if (res.headersSent) {
@@ -225,7 +225,7 @@ export class ModelAdapter {
    * @param {Request} req
    * @param {Response} res
    */
-  updateMany (req, res) {
+  updateMany(req, res) {
     const handleErr = (httpErr) => {
       let body = manyError(httpErr, res)
       if (res.headersSent) {
@@ -252,7 +252,7 @@ export class ModelAdapter {
       .pipe(res)
   }
 
-  async deleteMany (body) {
+  async deleteMany(body) {
     const { errors, filter } = this._searchSchema.validate(body)
     if (errors || !Object.keys(filter || {}).length) {
       // @ts-expect-error

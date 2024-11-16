@@ -6,7 +6,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MARIADB_ROOT_PASSWORD=example
+      - MARIADB_ROOT_PASSWORD=${SQLDB_PASSWORD}
 
   # see https://www.cockroachlabs.com/docs/stable/start-a-local-cluster-in-docker-mac.html#start-a-single-node-cluster
   cockroach:
@@ -17,8 +17,8 @@ services:
       - "8080:8080"
     environment:
       # - COCKROACH_DATABASE=/cockroach/cockroach-data
-      - COCKROACH_USERCOCK=root
-      - ROACH_PASSWORD=example
+      - COCKROACH_USERCOCK=${SQLDB_USER:-root}
+      - ROACH_PASSWORD=${SQLDB_PASSWORD}
     command: start-single-node --advertise-addr 'localhost' --insecure
 
   postgres:
@@ -27,8 +27,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=example
+      - POSTGRES_USER=${SQLDB_USER:-root}
+      - POSTGRES_PASSWORD=${SQLDB_PASSWORD}
 
   mongodb:
     # https://hub.docker.com/_/mongo
@@ -36,8 +36,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
 
 networks:
   hostnet:

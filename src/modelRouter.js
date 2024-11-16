@@ -1,9 +1,16 @@
-import { Router, sendEtag, queryParser, bodyParser, cacheControl, requestId } from 'veloze'
+import {
+  Router,
+  sendEtag,
+  queryParser,
+  bodyParser,
+  cacheControl,
+  requestId
+} from 'veloze'
 import { ModelAdapter } from './ModelAdapter.js'
 import { camelToDash } from './utils/index.js'
 
 /**
- * @typedef {import('./types').Handler} Handler
+ * @typedef {import('./types.js').Handler} Handler
  *
  * @typedef {object} Hooks
  * @property {Handler|Handler[]} [all]
@@ -28,13 +35,8 @@ import { camelToDash } from './utils/index.js'
  * @param {SetupRestOptions} options
  * @returns {Router}
  */
-export function modelRouter (options) {
-  const {
-    adapter,
-    bodyParserOpts,
-    preHooks = {},
-    postHooks = {}
-  } = options
+export function modelRouter(options) {
+  const { adapter, bodyParserOpts, preHooks = {}, postHooks = {} } = options
 
   const modelAdapter = new ModelAdapter(adapter)
   const modelNameDashed = camelToDash(modelAdapter.modelName)
@@ -59,16 +61,14 @@ export function modelRouter (options) {
     preHooks.all
   )
 
-  router.postHook(
-    postHooks.all,
-    (req, res) => {
-      res.send(res.body)
-    }
-  )
+  router.postHook(postHooks.all, (req, res) => {
+    res.send(res.body)
+  })
 
   // --- single operations ---
 
-  router.post('/',
+  router.post(
+    '/',
     preHooks.create,
     bodyParser(bodyParserOpts),
     async (req, res) => {
@@ -78,7 +78,8 @@ export function modelRouter (options) {
     postHooks.create
   )
 
-  router.put('/:id',
+  router.put(
+    '/:id',
     preHooks.update,
     bodyParser(bodyParserOpts),
     async (req, res) => {
@@ -97,7 +98,8 @@ export function modelRouter (options) {
   //   postHooks.patch
   // )
 
-  router.get('/:id',
+  router.get(
+    '/:id',
     preHooks.findById,
     queryParser,
     async (req, res) => {
@@ -108,7 +110,8 @@ export function modelRouter (options) {
     postHooks.findById
   )
 
-  router.get('/',
+  router.get(
+    '/',
     queryParser,
     preHooks.find,
     async (req, res) => {
@@ -118,7 +121,8 @@ export function modelRouter (options) {
     postHooks.find
   )
 
-  router.delete('/:id',
+  router.delete(
+    '/:id',
     preHooks.deleteById,
     async (req, res) => {
       const id = req.params?.id
@@ -143,19 +147,22 @@ export function modelRouter (options) {
   router.post('/search', ..._search)
   router.search('/', ..._search)
 
-  router.post('/create',
+  router.post(
+    '/create',
     preHooks.create,
     (req, res) => modelAdapter.createMany(req, res)
     // there is no postHook available as we are in streaming mode
   )
 
-  router.put('/',
+  router.put(
+    '/',
     preHooks.update,
     (req, res) => modelAdapter.updateMany(req, res)
     // there is no postHook available as we are in streaming mode
   )
 
-  router.post('/delete',
+  router.post(
+    '/delete',
     preHooks.delete,
     bodyParser(bodyParserOpts),
     async (req, res) => {

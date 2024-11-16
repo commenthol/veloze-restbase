@@ -5,12 +5,12 @@ import { BodyLimit, ObjTransform, manyError } from '../../src/utils/streams.js'
 import { HttpError } from 'veloze'
 
 class Reader extends Readable {
-  constructor (arr) {
+  constructor(arr) {
     super()
     this._arr = arr
   }
 
-  _read () {
+  _read() {
     const next = this._arr.shift()
     if (next) {
       this.push(next)
@@ -21,12 +21,12 @@ class Reader extends Readable {
 }
 
 class Response extends Transform {
-  constructor () {
+  constructor() {
     super()
     this.body = ''
   }
 
-  _transform (chunk, encoding, callback) {
+  _transform(chunk, encoding, callback) {
     this.body += chunk
     callback()
   }
@@ -44,12 +44,14 @@ describe('util/streams', function () {
       .pipe(jsonStream)
       .pipe(transform)
       .pipe(res)
-      .pipe(new Transform({
-        flush () {
-          assert.equal(res.body, '[{"a":1}, {"a":2}]')
-          done()
-        }
-      }))
+      .pipe(
+        new Transform({
+          flush() {
+            assert.equal(res.body, '[{"a":1}, {"a":2}]')
+            done()
+          }
+        })
+      )
   })
 
   it('shall pass stream errors', function (done) {
@@ -67,12 +69,17 @@ describe('util/streams', function () {
       .pipe(jsonStream)
       .pipe(transform)
       .pipe(res)
-      .pipe(new Transform({
-        flush () {
-          assert.equal(res.body, '[{"a":1}, {"status":500,"message":"General Error"}, {"status":500,"message":"General Error"}]')
-          done()
-        }
-      }))
+      .pipe(
+        new Transform({
+          flush() {
+            assert.equal(
+              res.body,
+              '[{"a":1}, {"status":500,"message":"General Error"}, {"status":500,"message":"General Error"}]'
+            )
+            done()
+          }
+        })
+      )
   })
 
   it('shall exit stream on max body limit', function (done) {
@@ -92,12 +99,17 @@ describe('util/streams', function () {
       .pipe(transform)
       .on('error', handleErr)
       .pipe(res)
-      .pipe(new Transform({
-        flush () {
-          assert.equal(res.body, '[{"status":400,"message":"Max body limit 20 reached"}]')
-          done()
-        }
-      }))
+      .pipe(
+        new Transform({
+          flush() {
+            assert.equal(
+              res.body,
+              '[{"status":400,"message":"Max body limit 20 reached"}]'
+            )
+            done()
+          }
+        })
+      )
   })
 
   it('shall exit stream on json error', function (done) {
@@ -122,11 +134,16 @@ describe('util/streams', function () {
       .pipe(transform)
       .on('error', handleErr)
       .pipe(res)
-      .pipe(new Transform({
-        flush () {
-          assert.equal(res.body, '[{"status":400,"message":"Invalid JSON (Unexpected \\"a\\" at position 27 in state STOP)"}]')
-          done()
-        }
-      }))
+      .pipe(
+        new Transform({
+          flush() {
+            assert.equal(
+              res.body,
+              '[{"status":400,"message":"Invalid JSON (Unexpected \\"a\\" at position 27 in state STOP)"}]'
+            )
+            done()
+          }
+        })
+      )
   })
 })

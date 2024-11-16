@@ -9,7 +9,7 @@
  * node examples/express.js
  * # make some traffic
  * node examples/traffic.js
-* ```
+ * ```
  */
 
 import dotenv from 'dotenv'
@@ -33,9 +33,7 @@ const {
 // 1. define a JSON-schema
 const jsonSchema = {
   type: 'object',
-  required: [
-    'item'
-  ],
+  required: ['item'],
   properties: {
     item: {
       type: 'string',
@@ -67,14 +65,13 @@ try {
   }
 }
 
-const client = new Sequelize(
-  database, SQLDB_USER, SQLDB_PASSWORD, {
-    host: SQLDB_HOST,
-    port: SQLDB_PORT,
-    dialect: SQLDB_DIALECT,
-    logging: false
-    // logging: (...msg) => console.log(msg)
-  })
+const client = new Sequelize(database, SQLDB_USER, SQLDB_PASSWORD, {
+  host: SQLDB_HOST,
+  port: SQLDB_PORT,
+  dialect: SQLDB_DIALECT,
+  logging: false
+  // logging: (...msg) => console.log(msg)
+})
 const adapter = new SqlAdapter({
   client,
   database: 'inventory',

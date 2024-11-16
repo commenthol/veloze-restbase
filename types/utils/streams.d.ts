@@ -1,4 +1,3 @@
-/// <reference types="node" />
 /**
  * @param {HttpError} err
  * @param {import('node:http').ServerResponse} [res]

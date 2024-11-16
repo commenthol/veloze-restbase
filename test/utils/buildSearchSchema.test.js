@@ -19,8 +19,9 @@ describe('utils/buildSearchSchema', function () {
   })
 
   it('shall build schema', function () {
-    const { jsonSchema, fieldNames, findOptionNames } =
-      buildSearchSchema({ modelSchema })
+    const { jsonSchema, fieldNames, findOptionNames } = buildSearchSchema({
+      modelSchema
+    })
     assert.equal(typeof jsonSchema, 'object')
     assert.deepEqual(fieldNames, ['id', 'str', 'int', 'bool'])
     assert.deepEqual(findOptionNames, [
@@ -99,10 +100,12 @@ describe('utils/buildSearchSchema', function () {
           offset: 1
         })
       })
-      itDisabled('not rule', function () { /// disable $not rule
+      itDisabled('not rule', function () {
+        /// disable $not rule
         testValid({ $not: { str: 'hi' }, int: 7 })
       })
-      itDisabled('or not rule', function () { /// disable $not rule
+      itDisabled('or not rule', function () {
+        /// disable $not rule
         testValid({ $or: [{ $not: { str: 'hi' }, int: 7 }] })
       })
       it('and or and not rule', function () {
@@ -168,7 +171,8 @@ describe('utils/buildSearchSchema', function () {
           }
         )
       })
-      itDisabled('not additional prop', function () { /// disable $not rule
+      itDisabled('not additional prop', function () {
+        /// disable $not rule
         testFail(
           { $not: { offset: 7 } },
           {

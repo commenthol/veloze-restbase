@@ -4,13 +4,13 @@ import { escapeRegExp, logger } from '../utils/index.js'
 import { DAY } from '../constants.js'
 
 /**
- * @typedef {import('../types').Index} Index
+ * @typedef {import('../types.js').Index} Index
  *//**
  * @typedef {object} MongoInitOptions
- * @property {import('mongodb/mongodb').MongoClient} [client]
+ * @property {import('mongodb').MongoClient} [client]
  * @property {Index[]} [indexes]
  *//**
- * @typedef {import('./Adapter').AdapterOptions} AdapterOptions
+ * @typedef {import('./Adapter.js').AdapterOptions} AdapterOptions
  *//**
  * @typedef {object} MongoAdapterOptionsExt
  * @property {string} database database name
@@ -36,7 +36,7 @@ export class MongoAdapter extends Adapter {
   /**
    * @param {MongoAdapterOptions} options
    */
-  constructor (options) {
+  constructor(options) {
     const {
       modelName,
       jsonSchema,
@@ -56,18 +56,17 @@ export class MongoAdapter extends Adapter {
     this._database = database
     this._indexes = indexes
     if (client) {
-      this.init({ client, indexes }).catch(err => log.error(err))
+      this.init({ client, indexes }).catch((err) => log.error(err))
     }
   }
 
   /**
    * @param {MongoInitOptions} options
    */
-  async init (options) {
+  async init(options) {
     const { client, indexes: __indexes } = options
     const indexes = __indexes || this._indexes || []
-    // @ts-expect-error
-    this._model = client.db(this._database).collection(this.modelName)
+    this._model = client?.db(this._database).collection(this.modelName)
     // always create index on `id` and `v` version
 
     const _indexes = [
@@ -92,7 +91,7 @@ export class MongoAdapter extends Adapter {
     }
   }
 
-  async create (doc) {
+  async create(doc) {
     const result = await this._model.insertOne({ ...doc })
     if (!result?.acknowledged) {
       throw new HttpError(400, 'document creation failed')
@@ -100,8 +99,8 @@ export class MongoAdapter extends Adapter {
     return doc
   }
 
-  async update (doc) {
-    const { id, updatedAt, v, ..._doc } = doc
+  async update(doc) {
+    const { id, updatedAt: _, v, ..._doc } = doc
     const filter = { id, deletedAt: { $exists: false } }
     if (this.optimisticLocking) {
       filter.v = v
@@ -119,7 +118,7 @@ export class MongoAdapter extends Adapter {
     return { id, ..._doc }
   }
 
-  async findById (id) {
+  async findById(id) {
     const result = await this._model.findOne(
       { id, deletedAt: { $exists: false } },
       { projection: { _id: 0 } }
@@ -137,7 +136,7 @@ export class MongoAdapter extends Adapter {
    * @param {object} findOptions
    * @returns {Promise<object>} found items
    */
-  async findMany (filter, findOptions) {
+  async findMany(filter, findOptions) {
     const _filter = {
       ...convertFilterRule(filter),
       deletedAt: { $exists: false }
@@ -153,7 +152,7 @@ export class MongoAdapter extends Adapter {
     return obj
   }
 
-  async deleteById (id) {
+  async deleteById(id) {
     const result = this.instantDeletion
       ? await this._model.deleteOne({ id })
       : await this._model.updateOne({ id }, { $set: { deletedAt: new Date() } })
@@ -174,7 +173,7 @@ export class MongoAdapter extends Adapter {
    *  deletedCount: number
    * }>}
    */
-  async deleteMany (filter) {
+  async deleteMany(filter) {
     const _filter = {
       ...convertFilterRule(filter),
       deletedAt: { $exists: false }
@@ -182,14 +181,16 @@ export class MongoAdapter extends Adapter {
     log.debug(_filter)
     const result = this.instantDeletion
       ? await this._model.deleteMany(_filter)
-      : await this._model.updateMany(_filter, { $set: { deletedAt: new Date() } })
+      : await this._model.updateMany(_filter, {
+          $set: { deletedAt: new Date() }
+        })
 
     return {
       deletedCount: result.deletedCount || result.modifiedCount || 0
     }
   }
 
-  async deleteDeleted (date) {
+  async deleteDeleted(date) {
     date = date || new Date(Date.now() - 30 * DAY)
     const result = await this._model.deleteMany({ deletedAt: { $lte: date } })
     return {
@@ -221,16 +222,18 @@ const convertFilterRule = (filterRule) => {
     //   continue
     // } else
     if (['$and', '$or'].includes(field)) {
-      filter[field] = rules.map(rule => convertFilterRule(rule))
+      filter[field] = rules.map((rule) => convertFilterRule(rule))
       continue
     }
     if (Array.isArray(rules.$eq)) {
       filter.$and = filter.$and || []
-      filter.$and.push({ $or: rules.$eq.map(item => ({ [field]: item })) })
+      filter.$and.push({ $or: rules.$eq.map((item) => ({ [field]: item })) })
       continue
     }
     for (const [op, value] of Object.entries(rules)) {
-      const esc = typeof value === 'string' && escapeRegExp(isCs ? value : value.toLowerCase())
+      const esc =
+        typeof value === 'string' &&
+        escapeRegExp(isCs ? value : value.toLowerCase())
 
       switch (op) {
         case '$like': {
@@ -293,12 +296,7 @@ MongoAdapter.convertFilterRule = convertFilterRule
  * @returns {object}
  */
 const convertFindOptions = (findOptions) => {
-  const {
-    offset,
-    limit,
-    fields,
-    sort = [{ id: 1 }]
-  } = findOptions
+  const { offset, limit, fields, sort = [{ id: 1 }] } = findOptions
   const options = {
     projection: { _id: 0 }
   }
