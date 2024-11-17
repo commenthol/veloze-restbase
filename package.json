@@ -1,6 +1,6 @@
 {
   "name": "@veloze/restbase",
-  "version": "1.0.0",
+  "version": "1.0.1-0",
   "description": "Rest-API to database",
   "keywords": [
     "restbase",
@@ -36,7 +36,7 @@
     "all": "npm-run-all clean lint c8 types",
     "ci": "CI=true npm-run-all lint c8 types",
     "changelog": "conv-changelog -o -t groups",
-    "clean": "rimraf coverage types",
+    "clean": "rimraf coverage",
     "c8": "c8 -r lcov -r text npm test",
     "dc": "docker compose --env-file .env -f ./scripts/docker-compose.yaml",
     "dc:down": "npm run dc -- down",
