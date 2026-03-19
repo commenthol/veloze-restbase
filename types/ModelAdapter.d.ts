@@ -3,7 +3,7 @@ export class ModelAdapter {
      * @param {Adapter} adapter
      * @param {ModelAdapterOptions} [options]
      */
-    constructor(adapter: Adapter, options?: ModelAdapterOptions | undefined);
+    constructor(adapter: Adapter, options?: ModelAdapterOptions);
     _adapter: import("../src/adapters/Adapter.js").Adapter;
     _schema: import("./Schema.js").Schema;
     _querySchema: {
@@ -66,7 +66,7 @@ export class ModelAdapter {
      * @param {Date} [date] defaults to Date.now() - 30d
      * @returns {Promise<object>} deleted stats
      */
-    deleteDeleted(date?: Date | undefined): Promise<object>;
+    deleteDeleted(date?: Date): Promise<object>;
     /**
      * @param {Request} req
      * @param {Response} res
@@ -81,8 +81,8 @@ export class ModelAdapter {
         deletedCount: number;
     }>;
 }
-export type Request = import("veloze/types").Request;
-export type Response = import("veloze/types").Response;
+export type Request = import("veloze").Request;
+export type Response = import("veloze").Response;
 export type Adapter = import("../src/adapters/Adapter.js").Adapter;
 export type ModelAdapterOptions = {
     /**

@@ -1,1 +1,1 @@
-export function nanoid(length?: number | undefined, ticks?: number): string;
+export function nanoid(length?: number, ticks?: number): string;

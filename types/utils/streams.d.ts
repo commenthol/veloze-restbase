@@ -3,7 +3,7 @@
  * @param {import('node:http').ServerResponse} [res]
  * @returns {string}
  */
-export function manyError(err: HttpError, res?: import("http").ServerResponse<import("http").IncomingMessage> | undefined): string;
+export function manyError(err: HttpError, res?: import("node:http").ServerResponse): string;
 /**
  * Transform to check if streamed objects are from an array;
  * after executing fn, returns success or failure into response

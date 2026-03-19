@@ -11,7 +11,7 @@ export class Schema {
      * @param {any} schema JSON schema
      * @param {SchemaOptions} [options]
      */
-    constructor(schema: any, options?: Ajv2020.Options | undefined);
+    constructor(schema: any, options?: SchemaOptions);
     _jsonSchema: any;
     _validate: any;
     _types: {} | undefined;
@@ -48,4 +48,3 @@ export type FormErrors = {
     [property: string]: string;
 };
 export type SchemaOptions = import("ajv").Options;
-import Ajv2020 from 'ajv/dist/2020.js';

@@ -16,7 +16,7 @@ export type LogFn = (namespace: string, options?: LogOptions) => LogBase;
  *   log = _logger('namespace')
  * })
  */
-declare class Logger extends EventEmitter<[never]> {
+declare class Logger extends EventEmitter<any> {
     constructor();
     logger: (namespace: any, opts: any) => any;
     /**

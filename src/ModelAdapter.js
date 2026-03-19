@@ -5,8 +5,8 @@ import { ObjTransform, BodyLimit, manyError } from './utils/streams.js'
 import JsonStream from '@search-dump/jsonstream'
 
 /**
- * @typedef {import('veloze/types').Request} Request
- * @typedef {import('veloze/types').Response} Response
+ * @typedef {import('veloze').Request} Request
+ * @typedef {import('veloze').Response} Response
  *
  * @typedef {import('../src/adapters/Adapter.js').Adapter} Adapter
  *

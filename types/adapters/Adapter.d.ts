@@ -79,7 +79,7 @@ export class Adapter {
      * @param {Date} [_date] defaults to Date.now() - 30d
      * @returns {Promise<object>} deleted stats
      */
-    deleteDeleted(_date?: Date | undefined): Promise<object>;
+    deleteDeleted(_date?: Date): Promise<object>;
 }
 export type AdapterOptions = {
     /**

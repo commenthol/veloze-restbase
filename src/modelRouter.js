@@ -26,7 +26,7 @@ import { camelToDash } from './utils/index.js'
 /**
  * @typedef {object} SetupRestOptions
  * @property {import('../src/adapters/Adapter.js').Adapter} adapter
- * @property {import('veloze/types').BodyParserOptions} bodyParserOpts
+ * @property {import('veloze').BodyParserOptions} bodyParserOpts
  * @property {Hooks} preHooks
  * @property {Hooks} postHooks
  */
