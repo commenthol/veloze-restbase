@@ -1,3 +1,9 @@
+# 1.0.2 (2026-03-19)
+
+### chore:
+
+- bump dependencies and update types (#69ec3e6)
+
 # 1.0.1 (2024-11-17)
 
 ### chore:
